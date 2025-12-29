@@ -1,10 +1,7 @@
 package main
 
-import (
-	app "CLI_App/src"
-)
+import root "CLI_App/src/cmd"
 
 func main() {
-	//app.Execute();
-	app.Init()
+	root.Execute()
 }
