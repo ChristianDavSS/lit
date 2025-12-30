@@ -4,6 +4,7 @@ import (
 	"CLI_App/src/internals"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -24,8 +25,12 @@ type Commit struct {
 var repo = internals.GetGitRepository()
 
 // FetchCommits main function to keep all the flags on.
-func FetchCommits(who string, verbose bool) {
-	r, err := repo.Log(&git.LogOptions{All: true})
+func FetchCommits(who string, verbose bool, since, until string) {
+	r, err := repo.Log(&git.LogOptions{
+		All:   true,
+		Since: validateDate(since),
+		Until: validateDate(until),
+	})
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -76,6 +81,7 @@ func printContributorData(contributor *Contributor, verbose bool) {
 			fmt.Printf("  Stats:\n")
 			formatPrintStats(c.stats)
 		}
+		fmt.Println()
 	}
 }
 
@@ -84,6 +90,24 @@ func formatPrintStats(stats object.FileStats) {
 	for _, v := range stats {
 		fmt.Printf("  %s", v)
 	}
+}
+
+// Function to validate dates and show feedback if needed. (since, until flags)
+func validateDate(date string) *time.Time {
+	if len(date) != 10 {
+		if len(date) > 0 {
+			fmt.Printf("error with the date format")
+		}
+		return nil
+	}
+	d, err := time.Parse("02/01/2006", date)
+	if err != nil {
+		if len(date) > 0 {
+			fmt.Printf("error parsing the date. %s", err)
+		}
+		return nil
+	}
+	return &d
 }
 
 // ------------------------------------------------------------------------------------------
