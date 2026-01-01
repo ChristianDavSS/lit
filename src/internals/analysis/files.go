@@ -4,8 +4,12 @@ import (
 	"CLI_App/src/internals"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 )
+
+// Slice with files to ignore (in case they're not in the .gitignore
+var ignore = []string{".git", ".gitignore", "node_modules"}
 
 // Test loc flag development: get the lines of code of every language
 func Test() {
@@ -25,7 +29,6 @@ func readGitIgnore() string {
 	gitign, err := os.ReadFile(".gitignore")
 	if err != nil {
 		fmt.Println("There´s not a .gitignore defined")
-		os.Exit(1)
 	}
 	return string(gitign)
 }
@@ -34,7 +37,7 @@ func readGitIgnore() string {
 func traverseFiles(languages map[string]int, files []os.DirEntry, dirName string) {
 	for _, v := range files {
 		// Use gitignore content instead
-		if strings.Contains(readGitIgnore(), v.Name()) || v.Name() == ".gitignore" {
+		if strings.Contains(readGitIgnore(), v.Name()) || slices.Contains(ignore, v.Name()) {
 			continue
 		}
 		if v.IsDir() {
@@ -52,12 +55,13 @@ func traverseFiles(languages map[string]int, files []os.DirEntry, dirName string
 				return
 			}
 			totalLines := len(strings.Split(string(file), "\n"))
-			nameLanguage := strings.Split(v.Name(), ".")[1]
+			nameSplit := strings.Split(v.Name(), ".")
+			nameLanguage := nameSplit[len(nameSplit)-1]
 			language, ok := languages[nameLanguage]
 			if !ok {
 				languages[nameLanguage] = totalLines
 			} else {
-				languages[nameLanguage] = language + 1
+				languages[nameLanguage] = language + totalLines
 			}
 		}
 	}
