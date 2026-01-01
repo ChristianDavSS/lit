@@ -10,8 +10,8 @@ import (
 func FetchCommits() *cobra.Command {
 	// Define the cobra command
 	command := &cobra.Command{
-		Use:   "scan",
-		Short: "Scan the whole repository in one single command",
+		Use:   "authors",
+		Short: "Scan the whole repository and returns the stats of the authors",
 		Run: func(cmd *cobra.Command, args []string) {
 			// Get the 'who' flag value
 			w, _ := cmd.Flags().GetString("who")
@@ -29,4 +29,14 @@ func FetchCommits() *cobra.Command {
 		"Get the commits until a estimated date (DD/MM/YYYY).")
 
 	return command
+}
+
+func Files() *cobra.Command {
+	return &cobra.Command{
+		Use:   "files",
+		Short: "Scan the repository files (must include a .gitignore) and retrieves data from them",
+		Run: func(cmd *cobra.Command, args []string) {
+			internal.Test()
+		},
+	}
 }

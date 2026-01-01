@@ -8,7 +8,7 @@ import (
 )
 
 // GetWorkingDirectory Method to return the current working directory
-func getWorkingDirectory() string {
+func GetWorkingDirectory() string {
 	path, err := os.Getwd()
 	if err != nil {
 		fmt.Println("Error with the path: ", err)
@@ -19,7 +19,7 @@ func getWorkingDirectory() string {
 }
 
 func GetGitRepository() *git.Repository {
-	repo, err := git.PlainOpen(getWorkingDirectory())
+	repo, err := git.PlainOpen(GetWorkingDirectory())
 	if err != nil {
 		fmt.Println("I couldn´t detect a Git repository in this path. ", err)
 		os.Exit(1)

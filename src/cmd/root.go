@@ -21,6 +21,7 @@ var root = &cobra.Command{
 func Execute() {
 	// Add commands to the root
 	root.AddCommand(commands.FetchCommits())
+	root.AddCommand(commands.Files())
 
 	// Execute the root, registering all the children commands
 	if err := root.Execute(); err != nil {
