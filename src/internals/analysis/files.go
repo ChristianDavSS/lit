@@ -9,20 +9,27 @@ import (
 )
 
 // String validScriptPattern for the regex that validates scripts
-var validScriptPattern = "^[a-zA-Z0-9._-]+\\.(py|go|java|js|jsx|dart|c|cpp|css|html|ts)$"
+var validScriptPattern = "^[a-zA-Z0-9._-]+\\.(py|go|java|js|jsx|dart|c|cpp|css|html|ts|md)$"
 
 // String notValidDirPattern for the regex that validates you won´t visit unwanted sites
-var notValidDirPattern = "^(node_modules|.*\\.exe|target|" +
+var notValidDirPattern = "^(node_modules|.*\\.exe|target|venv|__pycache__|" +
 	"\\.(git|idea|mvn|cmd))$"
 
-// Test loc flag development: get the lines of code of every language
-func Test() {
+func Files(locFlag bool) {
 	files, err := os.ReadDir(internals.GetWorkingDirectory())
 	if err != nil {
 		fmt.Println("Error reading the structure: ", err)
 		os.Exit(1)
 	}
+	if locFlag {
+		loc(files)
+		return
+	}
+	fmt.Println("Files command")
+}
 
+// Test loc flag development: get the lines of code of every language
+func loc(files []os.DirEntry) {
 	languagesMap := make(map[string]int)
 	traverseFiles(languagesMap, files, "")
 	fmt.Println()
@@ -40,7 +47,7 @@ func Test() {
 	fmt.Println("Total lines of code:", total)
 }
 
-// Read the files
+// Navigate through the file system with a DFS algorithm.
 func traverseFiles(languages map[string]int, files []os.DirEntry, dirName string) {
 	for _, v := range files {
 		// Check out if the current position contains a file or a directory

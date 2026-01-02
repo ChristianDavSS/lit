@@ -25,7 +25,7 @@ type Commit struct {
 var repo = internals.GetGitRepository()
 
 // FetchCommits main function to keep all the flags on.
-func FetchCommits(who string, verbose bool, since, until string) {
+func FetchCommits(who string, verbose, stats bool, since, until string, commitSize bool) {
 	r, err := repo.Log(&git.LogOptions{
 		All:   true,
 		Since: validateDate(since),
@@ -42,7 +42,7 @@ func FetchCommits(who string, verbose bool, since, until string) {
 		// We search by the git username
 		contrib, ok := authors[who]
 		if ok {
-			printContributorData(contrib, verbose)
+			printContributorData(contrib, verbose, stats, commitSize)
 			return
 		}
 		// We search by the git email
@@ -50,13 +50,13 @@ func FetchCommits(who string, verbose bool, since, until string) {
 		if err != nil {
 			panic(err)
 		}
-		printContributorData(contrib, verbose)
+		printContributorData(contrib, verbose, stats, commitSize)
 		return
 	}
 
 	// If there´s not a 'who' flag, we print all the data
 	for _, v := range authors {
-		printContributorData(v, verbose)
+		printContributorData(v, verbose, stats, commitSize)
 	}
 }
 
@@ -70,19 +70,33 @@ func findContribBy(contributors map[string]*Contributor, target string) (*Contri
 	return nil, fmt.Errorf("couldn't find a contributor with that email")
 }
 
-func printContributorData(contributor *Contributor, verbose bool) {
+func printContributorData(contributor *Contributor, verbose, stats, commitSize bool) {
 	fmt.Printf("- %s <%s>\n", contributor.name, contributor.email)
 	fmt.Printf("  Total of commits: %d\n", len(contributor.commits))
-	if verbose {
-		for _, c := range contributor.commits {
-			fmt.Printf("* %s %s", c.when, c.message)
+	for _, c := range contributor.commits {
+		// Calculate the number of files changed
+		totalChanges := len(c.stats)
+		fmt.Printf("  * %s %s", c.when, c.message)
+		if verbose {
 			fmt.Printf("  Hash: %s\n", c.hash)
-			fmt.Printf("  Modified files: %d\n", len(c.stats))
+			fmt.Printf("  Modified files: %d\n", totalChanges)
+		}
+		if commitSize {
+			addition, deletion := 0, 0
+			for _, v := range c.stats {
+				addition += v.Addition
+				deletion += v.Deletion
+			}
+			fmt.Printf("  Total lines of code changed (mean): %d\n", (addition+deletion)/totalChanges)
+			fmt.Printf("  Additions (mean): %d\n  Deletions (mean): %d\n",
+				addition/totalChanges, deletion/totalChanges)
+		}
+		if stats {
 			fmt.Printf("  Stats:\n")
 			formatPrintStats(c.stats)
 		}
-		fmt.Println()
 	}
+	fmt.Println()
 }
 
 // Function to print a formatted version of the commit stats.
@@ -90,6 +104,7 @@ func formatPrintStats(stats object.FileStats) {
 	for _, v := range stats {
 		fmt.Printf("  %s", v)
 	}
+	fmt.Println()
 }
 
 // Function to validate dates and show feedback if needed. (since, until flags)
