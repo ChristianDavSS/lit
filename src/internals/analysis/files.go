@@ -4,12 +4,16 @@ import (
 	"CLI_App/src/internals"
 	"fmt"
 	"os"
-	"slices"
+	"regexp"
 	"strings"
 )
 
-// Slice with files to ignore (in case they're not in the .gitignore
-var ignore = []string{".git", ".gitignore", "node_modules"}
+// String validScriptPattern for the regex that validates scripts
+var validScriptPattern = "^[a-zA-Z0-9._-]+\\.(py|go|java|js|jsx|dart|c|cpp|css|html|ts)$"
+
+// String notValidDirPattern for the regex that validates you won´t visit unwanted sites
+var notValidDirPattern = "^(node_modules|.*\\.exe|target|" +
+	"\\.(git|idea|mvn|cmd))$"
 
 // Test loc flag development: get the lines of code of every language
 func Test() {
@@ -21,35 +25,43 @@ func Test() {
 
 	languagesMap := make(map[string]int)
 	traverseFiles(languagesMap, files, "")
-	fmt.Println(languagesMap)
-}
-
-// Read the .gitignore content
-func readGitIgnore() string {
-	gitign, err := os.ReadFile(".gitignore")
-	if err != nil {
-		fmt.Println("There´s not a .gitignore defined")
+	fmt.Println()
+	fmt.Println("Results (language -> total lines of code):")
+	total := 0.0
+	// Get the total lines of code (so I can show the percentages per language)
+	for _, v := range languagesMap {
+		total += float64(v)
 	}
-	return string(gitign)
+
+	// Get the results
+	for k, v := range languagesMap {
+		fmt.Printf("%s %d (%.1f%%)\n", k, v, (float64(v)*100)/total)
+	}
+	fmt.Println("Total lines of code:", total)
 }
 
 // Read the files
 func traverseFiles(languages map[string]int, files []os.DirEntry, dirName string) {
 	for _, v := range files {
-		// Use gitignore content instead
-		if strings.Contains(readGitIgnore(), v.Name()) || slices.Contains(ignore, v.Name()) {
-			continue
-		}
+		// Check out if the current position contains a file or a directory
 		if v.IsDir() {
+			// If we should ignore a directory based on our regex, we do.
+			if r, _ := regexp.Match(notValidDirPattern, []byte(v.Name())); r {
+				continue
+			}
 			currentDirName := dirName + v.Name()
-			fmt.Println("Reading ", currentDirName)
+			fmt.Println("Reading", currentDirName)
 			dir, err := os.ReadDir(currentDirName)
 			if err != nil {
-				fmt.Println("ERROR -> ", err)
+				fmt.Println("Error: ", err)
 				os.Exit(1)
 			}
 			traverseFiles(languages, dir, currentDirName+"/")
 		} else {
+			// Check if the current file is a programming language script
+			if r, _ := regexp.Match(validScriptPattern, []byte(v.Name())); !r {
+				continue
+			}
 			file, err := os.ReadFile(dirName + v.Name())
 			if err != nil {
 				return
