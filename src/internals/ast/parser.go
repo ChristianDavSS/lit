@@ -74,12 +74,11 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 func functionBody(node *tree.Node, complexity *int, config *RegexComplexity) {
 	for i := range node.NamedChildCount() {
 		child := node.NamedChild(i)
-		if regexMatching(config.bodyStatements, child.GrammarName()) {
+		switch {
+		case regexMatching(config.bodyStatements, child.GrammarName()):
 			functionBody(child, complexity, config)
 			continue
-		}
-
-		if regexMatching(config.keyword, child.GrammarName()) {
+		case regexMatching(config.keyword, child.GrammarName()):
 			if child.GrammarName() == "else_clause" {
 				if node.Child(node.ChildCount()-1).GrammarName() == "if_statement" {
 					*complexity++
@@ -89,10 +88,11 @@ func functionBody(node *tree.Node, complexity *int, config *RegexComplexity) {
 			}
 			functionBody(child, complexity, config)
 			continue
+		default:
+			line := string(config.code[child.StartByte():child.EndByte()])
+			fmt.Println(line, child.GrammarName())
+			*complexity += strings.Count(line, config.andKw) + strings.Count(line, config.orKw)
 		}
-
-		line := string(config.code[child.StartByte():child.EndByte()])
-		*complexity += strings.Count(line, config.andKw) + strings.Count(line, config.orKw)
 	}
 }
 
