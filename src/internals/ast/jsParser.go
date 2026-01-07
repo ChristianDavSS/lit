@@ -48,8 +48,8 @@ func Test(code []byte) {
 
 	CyclicalComplexity(language, strings.Join(queries, " "), root, &RegexComplexity{
 		// Keywords: Their body will be visited, and they will sum up + 1
-		keyword: "(if_statement|else_clause|binary_expression|catch_clause|" +
-			"while_statement|do_statement|expression_statement|for_statement|switch_case|ternary_expression)",
+		keyword: "(if_statement|else_clause|catch_clause|for_in_statement|" +
+			"while_statement|do_statement|for_statement|switch_case|ternary_expression)",
 		// Body statements: Their body will be visited, but they don't sum up by themselves
 		bodyStatements: "(body|statement_block|switch_statement|lexical_declaration|variable_declarator)",
 		andKw:          "&&",
