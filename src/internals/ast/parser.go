@@ -1,6 +1,7 @@
 package ast
 
 import (
+	"CLI_App/src/internals/ast/languages"
 	"fmt"
 	"os"
 	"regexp"
@@ -8,18 +9,6 @@ import (
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 )
-
-type FunctionData struct {
-	name, parameters        string
-	totalParams, complexity int
-}
-
-type RegexComplexity struct {
-	keyword, bodyStatements, andKw, orKw string
-	code                                 []byte
-}
-
-var FunctionsData map[string][]*FunctionData
 
 func GetAST(code []byte, language *tree.Language) (*tree.Tree, error) {
 	// Create a parser for the code
@@ -50,8 +39,8 @@ func GetCapturesByQueries(language *tree.Language, queries string, code []byte, 
 }
 
 // CyclicalComplexity Function that calculates the cyclical complexity of the code. Useful for the user feedback
-func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node, config *RegexComplexity) {
-	query, cursor, captures := GetCapturesByQueries(language, queries, config.code, root)
+func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node, config *languages.RegexComplexity) {
+	query, cursor, captures := GetCapturesByQueries(language, queries, config.Code, root)
 	defer query.Close()
 	defer cursor.Close()
 	var nodes []*tree.QueryMatch
@@ -66,33 +55,26 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 
 	for i := range len(nodes) {
 		complexity := 1
-		functionBody(&nodes[i].Captures[2].Node, &complexity, config)
-		fmt.Printf("Complexity of %s - > %d\n", config.code[nodes[i].Captures[0].Node.StartByte():nodes[i].Captures[0].Node.EndByte()], complexity)
+		functionBodyAnalyzer(&nodes[i].Captures[2].Node, &complexity, config)
+		fmt.Printf("Complexity of %s - > %d\n", config.Code[nodes[i].Captures[0].Node.StartByte():nodes[i].Captures[0].Node.EndByte()], complexity)
 	}
 }
 
-func functionBody(node *tree.Node, complexity *int, config *RegexComplexity) {
+func functionBodyAnalyzer(node *tree.Node, complexity *int, config *languages.RegexComplexity) {
 	for i := range node.NamedChildCount() {
 		child := node.NamedChild(i)
-		line := string(config.code[child.StartByte():child.EndByte()])
+		line := string(config.Code[child.StartByte():child.EndByte()])
 		switch {
-		case regexMatching(config.bodyStatements, child.GrammarName()):
-			functionBody(child, complexity, config)
+		case regexMatching(config.BodyStatements, child.GrammarName()):
+			functionBodyAnalyzer(child, complexity, config)
 			continue
-		case regexMatching(config.keyword, child.GrammarName()):
-			fmt.Println("Keyword match:", string(config.code[child.StartByte():child.EndByte()]), child.GrammarName())
-			if child.GrammarName() == "else_clause" {
-				if node.Child(node.ChildCount()-1).GrammarName() == "if_statement" {
-					*complexity++
-				}
-			} else {
-				*complexity++
-			}
-			functionBody(child, complexity, config)
+		case regexMatching(config.Keyword, child.GrammarName()):
+			config.KeywordMatchFunc(child, complexity)
+			functionBodyAnalyzer(child, complexity, config)
 			continue
 		default:
 			fmt.Println(line, child.GrammarName())
-			*complexity += strings.Count(line, config.andKw) + strings.Count(line, config.orKw)
+			*complexity += strings.Count(line, config.AndKw) + strings.Count(line, config.OrKw)
 		}
 	}
 }
