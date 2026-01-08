@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 )
@@ -43,38 +42,37 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 	query, cursor, captures := GetCapturesByQueries(language, queries, config.Code, root)
 	defer query.Close()
 	defer cursor.Close()
-	var nodes []*tree.QueryMatch
 
 	for {
 		match := captures.Next()
 		if match == nil {
 			break
 		}
-		nodes = append(nodes, match)
+
+		complexity := 1
+		functionBodyAnalyzer(&match.Captures[2].Node, &complexity, config)
+		fmt.Printf("Complexity of %s - > %d\n", config.Code[match.Captures[0].Node.StartByte():match.Captures[0].Node.EndByte()], complexity)
+		fmt.Println()
 	}
 
-	for i := range len(nodes) {
+	/*for i := range len(nodes) {
 		complexity := 1
 		functionBodyAnalyzer(&nodes[i].Captures[2].Node, &complexity, config)
-		fmt.Printf("Complexity of %s - > %d\n", config.Code[nodes[i].Captures[0].Node.StartByte():nodes[i].Captures[0].Node.EndByte()], complexity)
-	}
+		fmt.Printf("Complexity of %s - > %d\n", config.Code[nodes[i].Captures[0].Node.StartByte():nodes[i].Captures[0].Node.EndByte()])
+	}*/
 }
 
 func functionBodyAnalyzer(node *tree.Node, complexity *int, config *languages.RegexComplexity) {
 	for i := range node.NamedChildCount() {
 		child := node.NamedChild(i)
-		line := string(config.Code[child.StartByte():child.EndByte()])
 		switch {
 		case regexMatching(config.BodyStatements, child.GrammarName()):
 			functionBodyAnalyzer(child, complexity, config)
-			continue
 		case regexMatching(config.Keyword, child.GrammarName()):
 			config.KeywordMatchFunc(child, complexity)
 			functionBodyAnalyzer(child, complexity, config)
-			continue
 		default:
-			fmt.Println(line, child.GrammarName())
-			*complexity += strings.Count(line, config.AndKw) + strings.Count(line, config.OrKw)
+			config.NoMatchFunc(child, complexity, config.Code)
 		}
 	}
 }

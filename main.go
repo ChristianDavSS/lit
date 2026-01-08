@@ -6,5 +6,5 @@ import (
 
 func main() {
 	//root.Execute()
-	ast.RunParser([]byte("function testCase(x,y){ const a = true ? 0 : 1; }"), "js")
+	ast.RunParser([]byte(" const FUNCION1 = () => { const a = true ? 1 : 0; } "), "js")
 }

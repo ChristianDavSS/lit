@@ -13,7 +13,7 @@ import (
 
 var languageQueries = map[string]*languages.LanguageInformation{
 	"js": &languages.JsLanguage,
-	"py": nil,
+	"py": &languages.PyLanguage,
 }
 
 func RunParser(code []byte, language string) {

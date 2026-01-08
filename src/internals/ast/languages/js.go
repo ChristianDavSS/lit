@@ -1,6 +1,8 @@
 package languages
 
 import (
+	"strings"
+
 	tree "github.com/tree-sitter/go-tree-sitter"
 	jsGrammar "github.com/tree-sitter/tree-sitter-javascript/bindings/go"
 )
@@ -29,16 +31,18 @@ var JsLanguage = LanguageInformation{
 			"while_statement|do_statement|for_statement|switch_case|ternary_expression)",
 		// Body statements: Their body will be visited, but they don't sum up by themselves
 		BodyStatements: "(body|statement_block|switch_statement|lexical_declaration|variable_declarator)",
-		AndKw:          "&&",
-		OrKw:           "||",
 		KeywordMatchFunc: func(node *tree.Node, complexity *int) {
 			if node.GrammarName() == "else_clause" {
 				if node.Child(node.ChildCount()-1).GrammarName() == "if_statement" {
 					*complexity++
 				}
-			} else {
-				*complexity++
+				return
 			}
+			*complexity++
+		},
+		NoMatchFunc: func(node *tree.Node, complexity *int, code []byte) {
+			line := string(code[node.StartByte():node.EndByte()])
+			*complexity += strings.Count(line, "&&") + strings.Count(line, "||")
 		},
 	},
 }

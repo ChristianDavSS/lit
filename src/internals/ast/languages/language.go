@@ -21,7 +21,8 @@ type FunctionData struct {
 
 // RegexComplexity - > struct made to give the parser enough data to parse our source code
 type RegexComplexity struct {
-	Keyword, BodyStatements, AndKw, OrKw string
-	Code                                 []byte
-	KeywordMatchFunc                     func(node *tree.Node, complexity *int)
+	Keyword, BodyStatements string
+	Code                    []byte
+	KeywordMatchFunc        func(node *tree.Node, complexity *int)
+	NoMatchFunc             func(node *tree.Node, complexity *int, code []byte)
 }
