@@ -14,35 +14,36 @@ var JsLanguage = LanguageInformation{
 		"(ERROR) @error",
 		// Normal Function
 		"(function_declaration name: (identifier) @function.name " +
-			"parameters: (formal_parameters) @function.parameters " +
-			"body: (statement_block) @function.body )",
-		// Arrow function
+			"parameters: (formal_parameters) @function.parameters) @function",
+		// Arrow Function
 		"(variable_declarator name: (identifier) @function.name " +
-			"value: (arrow_function parameters: (formal_parameters) @function.parameters " +
-			"body: (_) @function.body ))",
-		// Class methods
+			"value: (arrow_function parameters: (formal_parameters) @function.parameters)) @function",
+		// Class Methods
 		"(method_definition name: (property_identifier) @function.name " +
-			"parameters: (formal_parameters) @function.parameters " +
-			"body: (statement_block) @function.body )",
+			"parameters: (formal_parameters) @function.parameters) @function",
+		// Functions body information (keywords)
+		"[" +
+			// if, else-if, else
+			"(if_statement condition: (_) consequence: (_) alternative: (else_clause)?)",
+		"(else_clause (statement_block))",
+		// Statements
+		"(for_statement) (for_in_statement) (while_statement) (switch_case) (catch_clause)",
+		// Expressions
+		"(binary_expression left: (_) right: (_)) (ternary_expression)",
+		// ForEach, Map, etc.
+		"(member_expression object: (array) property: (_) arguments: (arguments (arrow_function))? )",
+		"] @keyword",
 	},
 	RegexComplexity: &RegexComplexity{
-		// Keywords: Their body will be visited, and they will sum up + 1
-		Keyword: "(if_statement|else_clause|catch_clause|for_in_statement|" +
-			"while_statement|do_statement|for_statement|switch_case|ternary_expression)",
-		// Body statements: Their body will be visited, but they don't sum up by themselves
-		BodyStatements: "(body|statement_block|switch_statement|lexical_declaration|variable_declarator)",
-		KeywordMatchFunc: func(node *tree.Node, complexity *int) {
-			if node.GrammarName() == "else_clause" {
-				if node.Child(node.ChildCount()-1).GrammarName() == "if_statement" {
-					*complexity++
+		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
+			if node.Node.GrammarName() == "binary_expression" {
+				line := string(code[node.Node.StartByte():node.Node.EndByte()])
+				totalBooleans := strings.Count(line, "&&") + strings.Count(line, "||")
+				if totalBooleans < 1 {
+					return
 				}
-				return
 			}
 			*complexity++
-		},
-		NoMatchFunc: func(node *tree.Node, complexity *int, code []byte) {
-			line := string(code[node.StartByte():node.EndByte()])
-			*complexity += strings.Count(line, "&&") + strings.Count(line, "||")
 		},
 	},
 }

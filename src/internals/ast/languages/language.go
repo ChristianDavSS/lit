@@ -15,14 +15,20 @@ type LanguageInformation struct {
 
 // FunctionData - > struct made to register all the data returned by the parser and save it
 type FunctionData struct {
-	name, parameters        string
-	totalParams, complexity int
+	Name, Parameters        string
+	TotalParams, Complexity int
 }
 
 // RegexComplexity - > struct made to give the parser enough data to parse our source code
 type RegexComplexity struct {
-	Keyword, BodyStatements string
-	Code                    []byte
-	KeywordMatchFunc        func(node *tree.Node, complexity *int)
-	NoMatchFunc             func(node *tree.Node, complexity *int, code []byte)
+	Code []byte
+	// Function made to manage each node of the nodes found of every function. Called in a for loop.
+	ManageNode func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int)
+}
+
+// AddInitialData Method to append the initial data into a FunctionData "object"
+func (f *FunctionData) AddInitialData(name, parameters string, totalParams int) {
+	f.Name = name
+	f.Parameters = parameters
+	f.TotalParams = totalParams
 }

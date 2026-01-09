@@ -6,5 +6,5 @@ import (
 
 func main() {
 	//root.Execute()
-	ast.RunParser([]byte(" const FUNCION1 = () => { const a = true ? 1 : 0; } "), "js")
+	ast.RunParser([]byte(" const FUNCION1 = (x, y) => { [].forEach(e => { [].map(a => { const a = 1; }); }) }"), "js")
 }

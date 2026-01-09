@@ -39,4 +39,11 @@ func RunParser(code []byte, language string) {
 
 	languageInfo.RegexComplexity.Code = code
 	CyclicalComplexity(languageInfo.Language, strings.Join(languageInfo.Queries, " "), root, languageInfo.RegexComplexity)
+
+	for _, v := range Functions {
+		fmt.Printf("Datos de la funcion %s%s\n", v.Name, v.Parameters)
+		fmt.Printf("Total de parametros: %d\n", v.TotalParams)
+		fmt.Printf("Complejidad ciclomatica: %d\n", v.Complexity)
+		fmt.Println()
+	}
 }
