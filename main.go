@@ -6,5 +6,5 @@ import (
 
 func main() {
 	//root.Execute()
-	ast.RunParser([]byte("const F=()=>{if(a){const F=(a)=>{if(b){}}}}\n"), "js")
+	ast.RunParser([]byte("const a = true || false;\n\n[[], []].forEach(e => { e.map(o => {}) })"), "js")
 }

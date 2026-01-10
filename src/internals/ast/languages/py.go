@@ -9,6 +9,23 @@ var PyLanguage = LanguageInformation{
 	Language: tree.NewLanguage(pyGrammar.Language()),
 	Queries: "(function_definition name: (identifier) @function.name " +
 		"parameters: (parameters) @function.parameters " +
-		"body: (block) @function.body )",
-	RegexComplexity: &RegexComplexity{},
+		"body: (block) @function.body) @function " +
+		"[" +
+		// If, else-if, else
+		"(if_statement condition: (_)) (elif_clause condition: (_)) (else_clause body: (_))" +
+		// Loops
+		"(for_statement) (while_statement condition: (_) body: (_))" +
+		// Operators
+		"(boolean_operator left: (_) right: (_))" +
+		// Clauses
+		"(except_clause value: (_)) (conditional_expression) (case_clause (_))" +
+		// List comprehension
+		"(list_comprehension body: (_) (for_in_clause left: (_) right: (_))) (if_clause (_))" +
+		"] @keyword",
+	RegexComplexity: &RegexComplexity{
+		MainFunc: &FunctionData{Name: "Main", Parameters: "()", TotalParams: 0, Complexity: 1},
+		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
+			*complexity++
+		},
+	},
 }

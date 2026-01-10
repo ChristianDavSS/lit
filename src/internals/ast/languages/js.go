@@ -28,9 +28,10 @@ var JsLanguage = LanguageInformation{
 		// Statements
 		"(for_statement) (for_in_statement) (while_statement) (switch_case) (catch_clause)" +
 		// Expressions
-		"(binary_expression left: (_) right: (_)) (ternary_expression)" +
+		"(binary_expression left: ((true)? (false)?) right: ((true)? (false)?)) (ternary_expression)" +
 		// ForEach, Map, etc.
-		"(member_expression object: (array) property: (_) arguments: (arguments (arrow_function))? )" +
+		"(call_expression function: (member_expression object: (_) property: (_) @call.name)" +
+		"arguments: (arguments (arrow_function)) (#match? @call.name \"^(forEach|map)$\"))" +
 		"] @keyword",
 	RegexComplexity: &RegexComplexity{
 		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
