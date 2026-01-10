@@ -7,10 +7,8 @@ import (
 
 var PyLanguage = LanguageInformation{
 	Language: tree.NewLanguage(pyGrammar.Language()),
-	Queries: []string{
-		"(function_definition name: (identifier) @function.name " +
-			"parameters: (parameters) @function.parameters " +
-			"body: (block) @function.body )",
-	},
+	Queries: "(function_definition name: (identifier) @function.name " +
+		"parameters: (parameters) @function.parameters " +
+		"body: (block) @function.body )",
 	RegexComplexity: &RegexComplexity{},
 }

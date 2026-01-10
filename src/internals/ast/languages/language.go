@@ -9,7 +9,7 @@ import tree "github.com/tree-sitter/go-tree-sitter"
 // LanguageInformation - > struct made to register the language an all it's complements (used by the parser)
 type LanguageInformation struct {
 	Language        *tree.Language
-	Queries         []string
+	Queries         string
 	RegexComplexity *RegexComplexity
 }
 
@@ -17,6 +17,7 @@ type LanguageInformation struct {
 type FunctionData struct {
 	Name, Parameters        string
 	TotalParams, Complexity int
+	StartByte, EndByte      uint
 }
 
 // RegexComplexity - > struct made to give the parser enough data to parse our source code
@@ -27,8 +28,10 @@ type RegexComplexity struct {
 }
 
 // AddInitialData Method to append the initial data into a FunctionData "object"
-func (f *FunctionData) AddInitialData(name, parameters string, totalParams int) {
+func (f *FunctionData) AddInitialData(name, parameters string, totalParams int, startByte, endByte uint) {
 	f.Name = name
 	f.Parameters = parameters
 	f.TotalParams = totalParams
+	f.StartByte = startByte
+	f.EndByte = endByte
 }

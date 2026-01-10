@@ -7,8 +7,6 @@ import (
 	tree "github.com/tree-sitter/go-tree-sitter"
 )
 
-var Functions []*languages.FunctionData
-
 func GetAST(code []byte, language *tree.Language) (*tree.Tree, error) {
 	// Create a parser for the code
 	parser := tree.NewParser()
@@ -40,15 +38,20 @@ func GetCapturesByQueries(language *tree.Language, queries string, code []byte, 
 	return query, cursor, cursor.Matches(query, root, code)
 }
 
-// CyclicalComplexity Function that calculates the cyclical complexity of the code. Useful for the user feedback
-func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node, config *languages.RegexComplexity) {
+// CyclicalComplexity Function that calculates the cyclical complexity of the code. Useful for the user feedback.
+func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node, config *languages.RegexComplexity) []*languages.FunctionData {
+	// Get the basics to iterate through the captures and keep the data
 	query, cursor, captures := GetCapturesByQueries(language, queries, config.Code, root)
 	defer query.Close()
 	defer cursor.Close()
-	i := -1
+	// List used as a stack to get the subfunctions and it's complexity right
+	var Stack []*languages.FunctionData
+	// Slice to save up the functions we take out the stack (with their final complexity)
+	var Functions []*languages.FunctionData
 
 	// Get the Functions data
 	for {
+		// Iterator of all the captures of the source code.
 		match := captures.Next()
 		if match == nil {
 			break
@@ -56,18 +59,36 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 		// Get a deep copy of the match (because the memory of it will be overwritten)
 		copyOf := *match
 
+		switch {
 		// While we iterate through the captures, we save up the copies on a slice of objects.
-		if query.CaptureNames()[copyOf.Captures[0].Index] == "function" {
-			i += 1
-			Functions = append(Functions, &languages.FunctionData{Complexity: 1})
-			// Add data to the
-			Functions[i].AddInitialData(
+		case query.CaptureNames()[copyOf.Captures[0].Index] == "function":
+			Stack = append(Stack, &languages.FunctionData{Complexity: 1})
+			// Add the initial data to the object reference in the stack
+			Stack[len(Stack)-1].AddInitialData(
 				string(config.Code[copyOf.Captures[1].Node.StartByte():copyOf.Captures[1].Node.EndByte()]),
 				string(config.Code[copyOf.Captures[2].Node.StartByte():copyOf.Captures[2].Node.EndByte()]),
 				int(copyOf.Captures[2].Node.NamedChildCount()),
+				copyOf.Captures[3].Node.StartByte(), copyOf.Captures[3].Node.EndByte(),
 			)
-		} else {
-			config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Functions[i].Complexity)
+
+		// Validate node ranges with the function body. This is the logic for functions inside functions or the main one
+		case copyOf.Captures[0].Node.StartByte() > Stack[len(Stack)-1].StartByte && copyOf.Captures[0].Node.EndByte() < Stack[len(Stack)-1].EndByte:
+			// + 1 in complexity in the function.
+			config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Stack[len(Stack)-1].Complexity)
+
+		// The code only gets here when there's a line out of the scope of a function
+		// Remove the most recent element from the stack and add it to the Functions list
+		default:
+			// While the last element on the stack doesn't satisfy the range of the current node, we add it up
+			// to the final Functions slice and remove it from the stack to keep going until it finds the right Function.
+			for !(copyOf.Captures[0].Node.StartByte() > Stack[len(Stack)-1].StartByte && copyOf.Captures[0].Node.EndByte() < Stack[len(Stack)-1].EndByte) {
+				Functions = append(Functions, Stack[len(Stack)-1])
+				Stack = Stack[:len(Stack)-1]
+			}
+			// At the end, in the verified node, we sum +1 to the complexity.
+			config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Stack[len(Stack)-1].Complexity)
 		}
 	}
+	// If there's any function still on the stack, we copy it into the Functions slice.
+	return append(Functions, Stack...)
 }
