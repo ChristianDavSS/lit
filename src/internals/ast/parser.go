@@ -48,6 +48,9 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 	var Stack []*languages.FunctionData
 	// Slice to save up the functions we take out the stack (with their final complexity)
 	var Functions []*languages.FunctionData
+	if config.MainFunc != nil {
+		Functions = append(Functions, config.MainFunc)
+	}
 
 	// Get the Functions data
 	for {
@@ -71,6 +74,10 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 				copyOf.Captures[3].Node.StartByte(), copyOf.Captures[3].Node.EndByte(),
 			)
 
+		// If there´s code without a function (JS, Python) before a function definition, we count it as main.
+		case len(Stack) <= 0:
+			config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Functions[0].Complexity)
+
 		// Validate node ranges with the function body. This is the logic for functions inside functions or the main one
 		case copyOf.Captures[0].Node.StartByte() > Stack[len(Stack)-1].StartByte && copyOf.Captures[0].Node.EndByte() < Stack[len(Stack)-1].EndByte:
 			// + 1 in complexity in the function.
@@ -79,14 +86,23 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 		// The code only gets here when there's a line out of the scope of a function
 		// Remove the most recent element from the stack and add it to the Functions list
 		default:
+			// Flag to detect if the node is a main function node or not
+			isMain := false
 			// While the last element on the stack doesn't satisfy the range of the current node, we add it up
 			// to the final Functions slice and remove it from the stack to keep going until it finds the right Function.
 			for !(copyOf.Captures[0].Node.StartByte() > Stack[len(Stack)-1].StartByte && copyOf.Captures[0].Node.EndByte() < Stack[len(Stack)-1].EndByte) {
+				if len(Stack) <= 1 && config.MainFunc != nil {
+					isMain = true
+					config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Functions[0].Complexity)
+					break
+				}
 				Functions = append(Functions, Stack[len(Stack)-1])
 				Stack = Stack[:len(Stack)-1]
 			}
 			// At the end, in the verified node, we sum +1 to the complexity.
-			config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Stack[len(Stack)-1].Complexity)
+			if !isMain {
+				config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Stack[len(Stack)-1].Complexity)
+			}
 		}
 	}
 	// If there's any function still on the stack, we copy it into the Functions slice.

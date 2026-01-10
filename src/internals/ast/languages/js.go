@@ -43,5 +43,6 @@ var JsLanguage = LanguageInformation{
 			}
 			*complexity++
 		},
+		MainFunc: &FunctionData{Name: "Main", Parameters: "()", TotalParams: 0, Complexity: 1},
 	},
 }
