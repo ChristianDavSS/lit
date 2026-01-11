@@ -79,7 +79,7 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 			config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Functions[0].Complexity)
 
 		// Validate node ranges with the function body. This is the logic for functions inside functions or the main one
-		case copyOf.Captures[0].Node.StartByte() >= Stack[len(Stack)-1].StartByte && copyOf.Captures[0].Node.EndByte() <= Stack[len(Stack)-1].EndByte:
+		case Stack[len(Stack)-1].IsTargetInRange(copyOf.Captures[0].Node.StartByte(), copyOf.Captures[0].Node.EndByte()):
 			// + 1 in complexity in the function.
 			config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Stack[len(Stack)-1].Complexity)
 
@@ -90,7 +90,7 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 			isMain := false
 			// While the last element on the stack doesn't satisfy the range of the current node, we add it up
 			// to the final Functions slice and remove it from the stack to keep going until it finds the right Function.
-			for !(copyOf.Captures[0].Node.StartByte() >= Stack[len(Stack)-1].StartByte && copyOf.Captures[0].Node.EndByte() <= Stack[len(Stack)-1].EndByte) {
+			for !(Stack[len(Stack)-1].IsTargetInRange(copyOf.Captures[0].Node.StartByte(), copyOf.Captures[0].Node.EndByte())) {
 				if len(Stack) <= 1 && config.MainFunc != nil {
 					isMain = true
 					config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Functions[0].Complexity)

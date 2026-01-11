@@ -36,3 +36,8 @@ func (f *FunctionData) AddInitialData(name, parameters string, totalParams int, 
 	f.StartByte = startByte
 	f.EndByte = endByte
 }
+
+// IsTargetInRange validates the range given by another function to validate it's written on the same byte range
+func (f *FunctionData) IsTargetInRange(startByte, endByte uint) bool {
+	return f.StartByte <= startByte && f.EndByte >= endByte
+}

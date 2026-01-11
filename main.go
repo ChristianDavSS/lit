@@ -6,5 +6,5 @@ import (
 
 func main() {
 	//root.Execute()
-	ast.RunParser([]byte("const a = true || false;\n\n[[], []].forEach(e => { e.map(o => {}) })"), "js")
+	ast.RunParser([]byte("public class Main {\n    public static void main(String[] args) {\n        int a = true ? 1 : false ? 1 : 0;\n    }\n}\n"), "java")
 }
