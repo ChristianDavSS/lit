@@ -37,5 +37,6 @@ var JavaLanguage = LanguageInformation{
 			}
 			*complexity++
 		},
+		MainFunc: &FunctionData{Name: "GlobalData", TotalParams: 0, Complexity: 1},
 	},
 }
