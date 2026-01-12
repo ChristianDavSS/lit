@@ -30,12 +30,6 @@ func RunParser(code []byte, language string) {
 	root := ast.RootNode()
 	defer ast.Close()
 
-	// Get the query, cursor and captures from the helper function
-	query, cursor, _ := GetCapturesByQueries(languageInfo.Language, languageInfo.Queries, code, root)
-	// Defer the closing (because the iterative process uses this two variables)
-	defer query.Close()
-	defer cursor.Close()
-
 	languageInfo.RegexComplexity.Code = code
 	Functions := CyclicalComplexity(languageInfo.Language, languageInfo.Queries, root, languageInfo.RegexComplexity)
 

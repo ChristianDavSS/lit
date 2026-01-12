@@ -9,16 +9,10 @@ import (
 	"strings"
 )
 
-// String validScriptPattern for the regex that validates scripts
-var validScriptPattern = "^[a-zA-Z0-9._-]+\\.(py|js|java)$"
-
-// String notValidDirPattern for the regex that validates you won´t visit unwanted sites
-var notValidDirPattern = "^(node_modules|.*\\.exe|target|venv|__pycache__|" +
-	"\\.(git|idea|mvn|cmd))$"
-
 // languagesMap - > map where we save all the data from the loc flag
 var languagesMap = make(map[string]int)
 
+// Files - > Entry point for the command line with the flags
 func Files(locFlag bool) {
 	files, err := os.ReadDir(internals.GetWorkingDirectory())
 	if err != nil {
@@ -29,12 +23,12 @@ func Files(locFlag bool) {
 		loc(files)
 		return
 	}
-	traverseFiles(files, "", fileScanner)
+	traverseFiles(files, "", fileScanner, scanValidScriptPattern)
 }
 
 // Test loc flag development: get the lines of code of every language
 func loc(files []os.DirEntry) {
-	traverseFiles(files, "", addToLanguagesMap)
+	traverseFiles(files, "", addToLanguagesMap, locValidScriptPattern)
 	fmt.Println()
 	fmt.Println("Results (language -> total lines of code):")
 	total := 0.0
@@ -50,6 +44,7 @@ func loc(files []os.DirEntry) {
 	fmt.Println("Total lines of code:", total)
 }
 
+// addToLanguagesMap - > Used as an argument when the loc flag is true
 func addToLanguagesMap(filename string, code []byte) {
 	totalLines := len(strings.Split(string(code), "\n"))
 	nameSplit := strings.Split(filename, ".")
@@ -71,7 +66,7 @@ func fileScanner(filename string, code []byte) {
 }
 
 // Navigate through the file system with a DFS algorithm.
-func traverseFiles(files []os.DirEntry, dirName string, fileFunction func(filename string, code []byte)) {
+func traverseFiles(files []os.DirEntry, dirName string, fileFunction func(filename string, code []byte), validScriptPattern string) {
 	for _, v := range files {
 		// Check out if the current position contains a file or a directory
 		if v.IsDir() {
@@ -86,7 +81,7 @@ func traverseFiles(files []os.DirEntry, dirName string, fileFunction func(filena
 				fmt.Println("Error: ", err)
 				os.Exit(1)
 			}
-			traverseFiles(dir, currentDirName+"/", fileFunction)
+			traverseFiles(dir, currentDirName+"/", fileFunction, validScriptPattern)
 		} else {
 			// Check if the current file is a programming language script
 			if r, _ := regexp.Match(validScriptPattern, []byte(v.Name())); !r {
