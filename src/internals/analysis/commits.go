@@ -4,23 +4,10 @@ import (
 	"CLI_App/src/internals"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
-
-type Contributor struct {
-	name, email string
-	commits     []*Commit
-}
-
-type Commit struct {
-	hash          plumbing.Hash
-	when, message string
-	stats         object.FileStats
-}
 
 var repo = internals.GetGitRepository()
 
@@ -76,8 +63,8 @@ func printContributorData(contributor *Contributor, verbose, stats, commitSize b
 	for _, c := range contributor.commits {
 		// Calculate the number of files changed
 		totalChanges := len(c.stats)
-		fmt.Printf("  * %s %s", c.when, c.message)
 		if verbose {
+			fmt.Printf("  * %s %s", c.when, c.message)
 			fmt.Printf("  Hash: %s\n", c.hash)
 			fmt.Printf("  Modified files: %d\n", totalChanges)
 		}
@@ -88,7 +75,7 @@ func printContributorData(contributor *Contributor, verbose, stats, commitSize b
 				deletion += v.Deletion
 			}
 			fmt.Printf("  Total lines of code changed (mean): %d\n", (addition+deletion)/totalChanges)
-			fmt.Printf("  Additions (mean): %d\n  Deletions (mean): %d\n",
+			fmt.Printf("  Additions (mean): %d\nDeletions (mean): %d\n",
 				addition/totalChanges, deletion/totalChanges)
 		}
 		if stats {
@@ -107,24 +94,6 @@ func formatPrintStats(stats object.FileStats) {
 	fmt.Println()
 }
 
-// Function to validate dates and show feedback if needed. (since, until flags)
-func validateDate(date string) *time.Time {
-	if len(date) != 10 {
-		if len(date) > 0 {
-			fmt.Printf("error with the date format")
-		}
-		return nil
-	}
-	d, err := time.Parse("02/01/2006", date)
-	if err != nil {
-		if len(date) > 0 {
-			fmt.Printf("error parsing the date. %s", err)
-		}
-		return nil
-	}
-	return &d
-}
-
 // ------------------------------------------------------------------------------------------
 
 // Function to get all the contributors and their data from a git branch (main default)
@@ -134,14 +103,14 @@ func getContributors(iter object.CommitIter) map[string]*Contributor {
 	// iterate through the CommitIter
 	err := iter.ForEach(func(commit *object.Commit) error {
 		// obj create a Contributor object
-		username := commit.Author.Name
+		email := commit.Author.Email
 		// Get the user from the map
-		c, ok := authors[username]
+		c, ok := authors[email]
 		// Executes if the user isn't on the map keys
 		if !ok {
 			commits := make([]*Commit, 0)
 			commits = append(commits, getCommitInformation(commit))
-			authors[username] = &Contributor{
+			authors[email] = &Contributor{
 				name:    commit.Author.Name,
 				email:   commit.Author.Email,
 				commits: commits,

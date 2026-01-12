@@ -13,3 +13,6 @@ var locValidScriptPattern = "^[a-zA-Z0-9._-]+\\.(py|go|java|js|jsx|dart|c|cpp|cs
 // Only contains unwanted directories and files.
 var notValidDirPattern = "^(node_modules|.*\\.exe|target|venv|__pycache__|" +
 	"\\.(git|idea|mvn|cmd))$"
+
+// remoteUserEmail pattern to detect emails of commits done in remote
+var remoteUserEmail = ".+@users.noreply.github.com"
