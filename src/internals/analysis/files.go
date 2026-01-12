@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"CLI_App/src/internals"
+	"CLI_App/src/internals/ast"
 	"fmt"
 	"os"
 	"regexp"
@@ -9,11 +10,14 @@ import (
 )
 
 // String validScriptPattern for the regex that validates scripts
-var validScriptPattern = "^[a-zA-Z0-9._-]+\\.(py|go|java|js|jsx|dart|c|cpp|css|html|ts|md)$"
+var validScriptPattern = "^[a-zA-Z0-9._-]+\\.(py|js|java)$"
 
 // String notValidDirPattern for the regex that validates you won´t visit unwanted sites
 var notValidDirPattern = "^(node_modules|.*\\.exe|target|venv|__pycache__|" +
 	"\\.(git|idea|mvn|cmd))$"
+
+// languagesMap - > map where we save all the data from the loc flag
+var languagesMap = make(map[string]int)
 
 func Files(locFlag bool) {
 	files, err := os.ReadDir(internals.GetWorkingDirectory())
@@ -25,13 +29,12 @@ func Files(locFlag bool) {
 		loc(files)
 		return
 	}
-	fmt.Println("Files command")
+	traverseFiles(files, "", fileScanner)
 }
 
 // Test loc flag development: get the lines of code of every language
 func loc(files []os.DirEntry) {
-	languagesMap := make(map[string]int)
-	traverseFiles(languagesMap, files, "")
+	traverseFiles(files, "", addToLanguagesMap)
 	fmt.Println()
 	fmt.Println("Results (language -> total lines of code):")
 	total := 0.0
@@ -47,8 +50,28 @@ func loc(files []os.DirEntry) {
 	fmt.Println("Total lines of code:", total)
 }
 
+func addToLanguagesMap(filename string, code []byte) {
+	totalLines := len(strings.Split(string(code), "\n"))
+	nameSplit := strings.Split(filename, ".")
+	nameLanguage := nameSplit[len(nameSplit)-1]
+	language, ok := languagesMap[nameLanguage]
+	if !ok {
+		languagesMap[nameLanguage] = totalLines
+	} else {
+		languagesMap[nameLanguage] = language + totalLines
+	}
+}
+
+// ---------------------------------------------------------------------
+
+// fileScanner get the full name of the file and the code, calling the parser on the code
+func fileScanner(filename string, code []byte) {
+	language := strings.Split(filename, ".")
+	ast.RunParser(code, language[len(language)-1])
+}
+
 // Navigate through the file system with a DFS algorithm.
-func traverseFiles(languages map[string]int, files []os.DirEntry, dirName string) {
+func traverseFiles(files []os.DirEntry, dirName string, fileFunction func(filename string, code []byte)) {
 	for _, v := range files {
 		// Check out if the current position contains a file or a directory
 		if v.IsDir() {
@@ -63,7 +86,7 @@ func traverseFiles(languages map[string]int, files []os.DirEntry, dirName string
 				fmt.Println("Error: ", err)
 				os.Exit(1)
 			}
-			traverseFiles(languages, dir, currentDirName+"/")
+			traverseFiles(dir, currentDirName+"/", fileFunction)
 		} else {
 			// Check if the current file is a programming language script
 			if r, _ := regexp.Match(validScriptPattern, []byte(v.Name())); !r {
@@ -73,15 +96,7 @@ func traverseFiles(languages map[string]int, files []os.DirEntry, dirName string
 			if err != nil {
 				return
 			}
-			totalLines := len(strings.Split(string(file), "\n"))
-			nameSplit := strings.Split(v.Name(), ".")
-			nameLanguage := nameSplit[len(nameSplit)-1]
-			language, ok := languages[nameLanguage]
-			if !ok {
-				languages[nameLanguage] = totalLines
-			} else {
-				languages[nameLanguage] = language + totalLines
-			}
+			fileFunction(dirName+v.Name(), file)
 		}
 	}
 }

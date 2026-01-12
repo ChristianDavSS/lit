@@ -1,10 +1,7 @@
 package main
 
-import (
-	"CLI_App/src/internals/ast"
-)
+import root "CLI_App/src/cmd"
 
 func main() {
-	//root.Execute()
-	ast.RunParser([]byte("a = True and False\nif True or False:\n    x = 1 if True or False else 12"), "py")
+	root.Execute()
 }

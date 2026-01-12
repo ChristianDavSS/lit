@@ -7,7 +7,7 @@ import (
 
 /*
  * registry.go - > File for configuration of the language queries. This contains each programming language
- * config for their parsing and analysis.
+ * config for their parsing and analysis. Also, contains methods to manage the Functions...
  */
 
 var languageQueries = map[string]*languages.LanguageInformation{
@@ -35,7 +35,6 @@ func RunParser(code []byte, language string) {
 	// Defer the closing (because the iterative process uses this two variables)
 	defer query.Close()
 	defer cursor.Close()
-	fmt.Printf("%s\n\n", root.ToSexp())
 
 	languageInfo.RegexComplexity.Code = code
 	Functions := CyclicalComplexity(languageInfo.Language, languageInfo.Queries, root, languageInfo.RegexComplexity)
