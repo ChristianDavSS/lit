@@ -3,6 +3,7 @@ package analysis
 import (
 	"CLI_App/src/internals"
 	"CLI_App/src/internals/ast"
+	"CLI_App/src/internals/ast/languages"
 	"fmt"
 	"os"
 	"regexp"
@@ -11,6 +12,9 @@ import (
 
 // languagesMap - > map where we save all the data from the loc flag
 var languagesMap = make(map[string]int)
+
+// DangerousFunctions map - > Map to save up the dangerous functions per script
+var DangerousFunctions = make(map[string][]*languages.FunctionData)
 
 // Files - > Entry point for the command line with the flags
 func Files(locFlag bool) {
@@ -24,6 +28,19 @@ func Files(locFlag bool) {
 		return
 	}
 	traverseFiles(files, "", fileScanner, scanValidScriptPattern)
+	printDangerousFunctions()
+}
+
+// printDangerousFunctions function - > Prints out the result of the file scanner.
+func printDangerousFunctions() {
+	fmt.Printf("Dangerous functions found in the project: %d\n", len(DangerousFunctions))
+	for key, value := range DangerousFunctions {
+		fmt.Printf("%s:\n", key)
+		for _, item := range value {
+			fmt.Printf("  Function %s %s\n  Parameters: %d\n  Complexity: %d\n", item.Name, item.Parameters, item.TotalParams, item.Complexity)
+		}
+		fmt.Println()
+	}
 }
 
 // Test loc flag development: get the lines of code of every language
@@ -62,7 +79,11 @@ func addToLanguagesMap(filename string, code []byte) {
 // fileScanner get the full name of the file and the code, calling the parser on the code
 func fileScanner(filename string, code []byte) {
 	language := strings.Split(filename, ".")
-	ast.RunParser(code, language[len(language)-1])
+	functions := ast.RunParser(code, language[len(language)-1])
+	// If there's any function returned, we save it up
+	if len(functions) > 0 {
+		DangerousFunctions[filename] = append(DangerousFunctions[filename], functions...)
+	}
 }
 
 // Navigate through the file system with a DFS algorithm.
