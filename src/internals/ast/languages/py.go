@@ -25,6 +25,9 @@ var PyLanguage = LanguageInformation{
 	RegexComplexity: &RegexComplexity{
 		MainFunc: &FunctionData{Name: "Main", Parameters: "()", TotalParams: 0, Complexity: 1},
 		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
+			if node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment" {
+				return
+			}
 			*complexity++
 		},
 	},

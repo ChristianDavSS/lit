@@ -28,7 +28,7 @@ var JsLanguage = LanguageInformation{
 		// Statements
 		"(for_statement) (for_in_statement) (while_statement) (switch_case) (catch_clause)" +
 		// Expressions
-		"(binary_expression left: ((true)? (false)?) right: ((true)? (false)?)) (ternary_expression)" +
+		"(binary_expression left: (_) right: (_)) (ternary_expression)" +
 		// ForEach, Map, etc.
 		"(call_expression function: (member_expression object: (_) property: (_) @call.name)" +
 		"arguments: (arguments (arrow_function)) (#match? @call.name \"^(forEach|map)$\"))" +
@@ -38,7 +38,7 @@ var JsLanguage = LanguageInformation{
 			if node.Node.GrammarName() == "binary_expression" {
 				line := string(code[node.Node.StartByte():node.Node.EndByte()])
 				totalBooleans := strings.Count(line, "&&") + strings.Count(line, "||")
-				if totalBooleans < 1 {
+				if totalBooleans < 1 || node.Node.Parent().GrammarName() == "variable_declarator" {
 					return
 				}
 			}
