@@ -23,7 +23,7 @@ var PyLanguage = LanguageInformation{
 		"(list_comprehension body: (_) (for_in_clause left: (_) right: (_))) (if_clause (_))" +
 		"] @keyword",
 	RegexComplexity: &RegexComplexity{
-		MainFunc: &FunctionData{Name: "Main", Parameters: "()", TotalParams: 0, Complexity: 1},
+		MainFunc: &FunctionData{Name: "Main", TotalParams: 0, Complexity: 1},
 		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
 			if node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment" {
 				return

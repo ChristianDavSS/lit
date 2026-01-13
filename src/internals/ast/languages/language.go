@@ -15,9 +15,10 @@ type LanguageInformation struct {
 
 // FunctionData - > struct made to register all the data returned by the parser and save it
 type FunctionData struct {
-	Name, Parameters        string
-	TotalParams, Complexity int
-	StartByte, EndByte      uint
+	Name                     string
+	TotalParams, Complexity  int
+	StartPosition            tree.Point
+	StartByte, EndByte, Size uint
 }
 
 // RegexComplexity - > struct made to give the parser enough data to parse our source code
@@ -29,12 +30,13 @@ type RegexComplexity struct {
 }
 
 // AddInitialData Method to append the initial data into a FunctionData "object"
-func (f *FunctionData) AddInitialData(name, parameters string, totalParams int, startByte, endByte uint) {
+func (f *FunctionData) AddInitialData(name string, totalParams int, startByte, endByte, size uint, startPos tree.Point) {
 	f.Name = name
-	f.Parameters = parameters
 	f.TotalParams = totalParams
 	f.StartByte = startByte
 	f.EndByte = endByte
+	f.Size = size
+	f.StartPosition = startPos
 }
 
 // IsTargetInRange validates the range given by another function to validate it's written on the same byte range

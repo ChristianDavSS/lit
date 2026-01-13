@@ -69,9 +69,10 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 			// Add the initial data to the object reference in the stack
 			Stack[len(Stack)-1].AddInitialData(
 				string(config.Code[copyOf.Captures[1].Node.StartByte():copyOf.Captures[1].Node.EndByte()]),
-				string(config.Code[copyOf.Captures[2].Node.StartByte():copyOf.Captures[2].Node.EndByte()]),
 				int(copyOf.Captures[2].Node.NamedChildCount()),
 				copyOf.Captures[3].Node.StartByte(), copyOf.Captures[3].Node.EndByte(),
+				copyOf.Captures[3].Node.EndPosition().Row-copyOf.Captures[2].Node.StartPosition().Row,
+				copyOf.Captures[2].Node.StartPosition(),
 			)
 
 		// If there´s code without a function (JS, Python) before a function definition, we count it as main.

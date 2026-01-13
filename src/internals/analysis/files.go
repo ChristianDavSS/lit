@@ -33,11 +33,13 @@ func Files(locFlag bool) {
 
 // printDangerousFunctions function - > Prints out the result of the file scanner.
 func printDangerousFunctions() {
-	fmt.Printf("Dangerous functions found in the project: %d\n", len(DangerousFunctions))
+	fmt.Printf("\nDangerous functions found in the project: %d\n", len(DangerousFunctions))
 	for key, value := range DangerousFunctions {
-		fmt.Printf("%s:\n", key)
+		fmt.Printf("- %s:\n", key)
 		for _, item := range value {
-			fmt.Printf("  Function %s %s\n  Parameters: %d\n  Complexity: %d\n", item.Name, item.Parameters, item.TotalParams, item.Complexity)
+			fmt.Printf(" * Function %s (at %d:%d)\n", item.Name, item.StartPosition.Row, item.StartPosition.Column)
+			fmt.Printf("   Parameters: %d\n   Complexity: %d\n", item.TotalParams, item.Complexity)
+			fmt.Printf("   Total lines of code: %d\n", item.Size)
 		}
 		fmt.Println()
 	}
