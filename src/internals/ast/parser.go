@@ -48,9 +48,8 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 	var Stack []*languages.FunctionData
 	// Slice to save up the functions we take out the stack (with their final complexity)
 	var Functions []*languages.FunctionData
-	if config.MainFunc != nil {
-		Functions = append(Functions, config.MainFunc)
-	}
+	// Append a default main to the slice (JS, Python)
+	Functions = append(Functions, &languages.FunctionData{Name: "Default Main", Complexity: 1, TotalParams: 0})
 
 	// Get the Functions data
 	for {
@@ -92,7 +91,8 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 			// While the last element on the stack doesn't satisfy the range of the current node, we add it up
 			// to the final Functions slice and remove it from the stack to keep going until it finds the right Function.
 			for !(Stack[len(Stack)-1].IsTargetInRange(copyOf.Captures[0].Node.StartByte(), copyOf.Captures[0].Node.EndByte())) {
-				if len(Stack) <= 1 && config.MainFunc != nil {
+				// If the stack only has the current function, we assign the +1 to the main (default).
+				if len(Stack) <= 1 {
 					isMain = true
 					config.ManageNode(query.CaptureNames(), config.Code, copyOf.Captures[0], &Functions[0].Complexity)
 					break
@@ -106,6 +106,8 @@ func CyclicalComplexity(language *tree.Language, queries string, root *tree.Node
 			}
 		}
 	}
+	// Restart the complexity of the main function of the script.
+	Functions[0].Complexity = 1
 	// If there's any function still on the stack, we copy it into the Functions slice.
 	return append(Functions, Stack...)
 }

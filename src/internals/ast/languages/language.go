@@ -26,7 +26,6 @@ type RegexComplexity struct {
 	Code []byte
 	// Function made to manage each node of the nodes found of every function. Called in a for loop.
 	ManageNode func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int)
-	MainFunc   *FunctionData
 }
 
 // AddInitialData Method to append the initial data into a FunctionData "object"

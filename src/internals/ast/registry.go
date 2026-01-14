@@ -43,11 +43,11 @@ func RunParser(code []byte, language string) []*languages.FunctionData {
 	for i < len(functions) {
 		function := functions[i]
 		// If the functions isn't dangerous, we delete it
-		if function.TotalParams < 5 || function.Complexity < 10 {
-			functions = append(functions[:i], functions[i+1:]...)
-		} else {
+		if function.TotalParams >= 5 || function.Complexity >= 10 || function.Size >= 85 {
 			// If the function is dangerous, we increase the counter.
 			i++
+		} else {
+			functions = append(functions[:i], functions[i+1:]...)
 		}
 	}
 
