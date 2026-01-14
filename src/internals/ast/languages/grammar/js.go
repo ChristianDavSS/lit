@@ -36,12 +36,10 @@ var JsLanguage = languages.LanguageInformation{
 		"(call_expression function: (member_expression object: (_) property: (_) @call.name)" +
 		"arguments: (arguments (arrow_function)) (#match? @call.name \"^(forEach|map)$\"))" +
 		"] @keyword",
-	RegexComplexity: &languages.RegexComplexity{
-		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
-			if node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator" {
-				return
-			}
-			*complexity++
-		},
+	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
+		if node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator" {
+			return
+		}
+		*complexity++
 	},
 }

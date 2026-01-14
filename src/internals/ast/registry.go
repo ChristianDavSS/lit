@@ -34,10 +34,8 @@ func RunParser(code []byte, language string) []*languages.FunctionData {
 	root := ast.RootNode()
 	defer ast.Close()
 
-	// Set up the code on the configuration struct
-	languageInfo.RegexComplexity.Code = code
 	// Find the cyclical complexity of the functions
-	functions := CyclicalComplexity(languageInfo.Language, languageInfo.Queries, root, languageInfo.RegexComplexity)
+	functions := CyclicalComplexity(languageInfo.Language, languageInfo.Queries, root, code, languageInfo.ManageNode)
 
 	// Remove the 'normal' functions from the list, keeping the dangerous ones.
 	i := 0

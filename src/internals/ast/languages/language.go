@@ -8,9 +8,9 @@ import tree "github.com/tree-sitter/go-tree-sitter"
 
 // LanguageInformation - > struct made to register the language an all it's complements (used by the parser)
 type LanguageInformation struct {
-	Language        *tree.Language
-	Queries         string
-	RegexComplexity *RegexComplexity
+	Language   *tree.Language
+	Queries    string
+	ManageNode func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int)
 }
 
 // FunctionData - > struct made to register all the data returned by the parser and save it
@@ -20,13 +20,6 @@ type FunctionData struct {
 	StartPosition            tree.Point
 	StartByte, EndByte, Size uint
 	Feedback                 string
-}
-
-// RegexComplexity - > struct made to give the parser enough data to parse our source code
-type RegexComplexity struct {
-	Code []byte
-	// Function made to manage each node of the nodes found of every function. Called in a for loop.
-	ManageNode func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int)
 }
 
 // AddInitialData Method to append the initial data into a FunctionData "object"

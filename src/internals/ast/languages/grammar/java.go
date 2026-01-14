@@ -23,17 +23,15 @@ var JavaLanguage = languages.LanguageInformation{
 		"((binary_expression left: (_) right: (_)) @bin_exp (#match? @bin_exp \".*(&&|[|]{2}).*\"))" +
 		"(switch_block_statement_group) (catch_clause)" +
 		"] @keyword",
-	RegexComplexity: &languages.RegexComplexity{
-		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
-			// Search the 'alternative' node in the children
-			alternative := node.Node.ChildByFieldName("alternative")
-			switch {
-			case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
-				return
-			case alternative != nil && alternative.GrammarName() == "block":
-				*complexity++
-			}
+	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
+		// Search the 'alternative' node in the children
+		alternative := node.Node.ChildByFieldName("alternative")
+		switch {
+		case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
+			return
+		case alternative != nil && alternative.GrammarName() == "block":
 			*complexity++
-		},
+		}
+		*complexity++
 	},
 }

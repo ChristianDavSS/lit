@@ -25,6 +25,12 @@ type Commit struct {
 	Stats         object.FileStats
 }
 
+// Directory struct: Saves up the dir data (for the DFS)
+type Directory struct {
+	DirName string
+	Content []os.DirEntry
+}
+
 // ValidateDate Function to validate dates and show feedback if needed. (since, until flags)
 func ValidateDate(date string) *time.Time {
 	if len(date) != 10 {

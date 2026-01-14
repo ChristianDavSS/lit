@@ -9,7 +9,11 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 )
+
+// Create a wait group to use Go concurrency
+var wg sync.WaitGroup
 
 // languagesMap - > map where we save all the data from the loc flag
 var languagesMap = make(map[string]int)
@@ -28,7 +32,7 @@ func Files(locFlag bool) {
 		loc(files)
 		return
 	}
-	traverseFiles(files, "", fileScanner, utils.ScanValidScriptPattern)
+	traverseFiles(files, fileScanner, utils.ScanValidScriptPattern)
 	printDangerousFunctions()
 }
 
@@ -48,7 +52,7 @@ func printDangerousFunctions() {
 
 // Test loc flag development: get the lines of code of every language
 func loc(files []os.DirEntry) {
-	traverseFiles(files, "", addToLanguagesMap, utils.LocValidScriptPattern)
+	traverseFiles(files, addToLanguagesMap, utils.LocValidScriptPattern)
 	fmt.Println()
 	fmt.Println("Results (language -> total lines of code):")
 	total := 0.0
@@ -66,6 +70,7 @@ func loc(files []os.DirEntry) {
 
 // addToLanguagesMap - > Used as an argument when the loc flag is true
 func addToLanguagesMap(filename string, code []byte) {
+	defer wg.Done()
 	totalLines := len(strings.Split(string(code), "\n"))
 	nameSplit := strings.Split(filename, ".")
 	nameLanguage := nameSplit[len(nameSplit)-1]
@@ -81,6 +86,7 @@ func addToLanguagesMap(filename string, code []byte) {
 
 // fileScanner get the full name of the file and the code, calling the parser on the code
 func fileScanner(filename string, code []byte) {
+	defer wg.Done()
 	language := strings.Split(filename, ".")
 	functions := ast.RunParser(code, language[len(language)-1])
 	// If there's any function returned, we save it up
@@ -90,32 +96,41 @@ func fileScanner(filename string, code []byte) {
 }
 
 // Navigate through the file system with a DFS algorithm.
-func traverseFiles(files []os.DirEntry, dirName string, fileFunction func(filename string, code []byte), validScriptPattern string) {
-	for _, v := range files {
-		// Check out if the current position contains a file or a directory
-		if v.IsDir() {
-			// If we should ignore a directory based on our regex, we do.
-			if r, _ := regexp.Match(utils.NotValidDirPattern, []byte(v.Name())); r {
-				continue
+func traverseFiles(initialFiles []os.DirEntry, fileFunction func(filename string, code []byte), validScriptPattern string) {
+	stack := []utils.Directory{{"", initialFiles}}
+	for len(stack) > 0 {
+		// Extract the last element from the stack
+		files := stack[len(stack)-1]
+		// Remove the last element from the stack (the files we just iterated).
+		stack = stack[:len(stack)-1]
+		for _, v := range files.Content {
+			// Check out if the current position contains a file or a directory
+			if v.IsDir() {
+				// If we should ignore a directory based on our regex, we do.
+				if r, _ := regexp.Match(utils.NotValidDirPattern, []byte(v.Name())); r {
+					continue
+				}
+				fmt.Println("Reading", files.DirName+v.Name()+"/")
+				dir, err := os.ReadDir(files.DirName + v.Name() + "/")
+				if err != nil {
+					fmt.Println("Error reading the directory...")
+					os.Exit(1)
+				}
+				stack = append(stack, utils.Directory{DirName: files.DirName + v.Name() + "/", Content: dir})
+			} else {
+				// Check if the current file is a programming language script
+				if r, _ := regexp.Match(validScriptPattern, []byte(v.Name())); !r {
+					continue
+				}
+				file, err := os.ReadFile(files.DirName + v.Name())
+				if err != nil {
+					fmt.Printf("Error reading the file %s. Please report the issue.\n", files.DirName+v.Name())
+					os.Exit(1)
+				}
+				wg.Add(1)
+				go fileFunction(files.DirName+v.Name(), file)
 			}
-			currentDirName := dirName + v.Name()
-			fmt.Println("Reading", currentDirName)
-			dir, err := os.ReadDir(currentDirName)
-			if err != nil {
-				fmt.Println("Error: ", err)
-				os.Exit(1)
-			}
-			traverseFiles(dir, currentDirName+"/", fileFunction, validScriptPattern)
-		} else {
-			// Check if the current file is a programming language script
-			if r, _ := regexp.Match(validScriptPattern, []byte(v.Name())); !r {
-				continue
-			}
-			file, err := os.ReadFile(dirName + v.Name())
-			if err != nil {
-				return
-			}
-			fileFunction(dirName+v.Name(), file)
 		}
 	}
+	wg.Wait()
 }

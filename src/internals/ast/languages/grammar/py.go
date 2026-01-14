@@ -24,12 +24,10 @@ var PyLanguage = languages.LanguageInformation{
 		// List comprehension
 		"(list_comprehension body: (_) (for_in_clause left: (_) right: (_))) (if_clause (_))" +
 		"] @keyword",
-	RegexComplexity: &languages.RegexComplexity{
-		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
-			if node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment" {
-				return
-			}
-			*complexity++
-		},
+	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
+		if node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment" {
+			return
+		}
+		*complexity++
 	},
 }
