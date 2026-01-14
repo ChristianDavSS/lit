@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"CLI_App/src/internals"
+	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast"
 	"CLI_App/src/internals/ast/languages"
 	"fmt"
@@ -27,7 +28,7 @@ func Files(locFlag bool) {
 		loc(files)
 		return
 	}
-	traverseFiles(files, "", fileScanner, scanValidScriptPattern)
+	traverseFiles(files, "", fileScanner, utils.ScanValidScriptPattern)
 	printDangerousFunctions()
 }
 
@@ -38,8 +39,8 @@ func printDangerousFunctions() {
 		fmt.Printf("- %s:\n", key)
 		for _, item := range value {
 			fmt.Printf(" * Function %s (at %d:%d)\n", item.Name, item.StartPosition.Row, item.StartPosition.Column)
-			fmt.Printf("   Parameters: %d\n   Complexity: %d\n", item.TotalParams, item.Complexity)
-			fmt.Printf("   Total lines of code: %d\n", item.Size)
+			fmt.Printf("   Parameters: %d\n   Total lines of code: %d\n", item.TotalParams, item.Size)
+			fmt.Println(item.Feedback)
 		}
 		fmt.Println()
 	}
@@ -47,7 +48,7 @@ func printDangerousFunctions() {
 
 // Test loc flag development: get the lines of code of every language
 func loc(files []os.DirEntry) {
-	traverseFiles(files, "", addToLanguagesMap, locValidScriptPattern)
+	traverseFiles(files, "", addToLanguagesMap, utils.LocValidScriptPattern)
 	fmt.Println()
 	fmt.Println("Results (language -> total lines of code):")
 	total := 0.0
@@ -94,7 +95,7 @@ func traverseFiles(files []os.DirEntry, dirName string, fileFunction func(filena
 		// Check out if the current position contains a file or a directory
 		if v.IsDir() {
 			// If we should ignore a directory based on our regex, we do.
-			if r, _ := regexp.Match(notValidDirPattern, []byte(v.Name())); r {
+			if r, _ := regexp.Match(utils.NotValidDirPattern, []byte(v.Name())); r {
 				continue
 			}
 			currentDirName := dirName + v.Name()

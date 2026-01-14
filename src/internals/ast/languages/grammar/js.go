@@ -1,11 +1,13 @@
-package languages
+package grammar
 
 import (
+	"CLI_App/src/internals/ast/languages"
+
 	tree "github.com/tree-sitter/go-tree-sitter"
 	jsGrammar "github.com/tree-sitter/tree-sitter-javascript/bindings/go"
 )
 
-var JsLanguage = LanguageInformation{
+var JsLanguage = languages.LanguageInformation{
 	Language: tree.NewLanguage(jsGrammar.Language()),
 	Queries:
 	// Normal Function
@@ -34,7 +36,7 @@ var JsLanguage = LanguageInformation{
 		"(call_expression function: (member_expression object: (_) property: (_) @call.name)" +
 		"arguments: (arguments (arrow_function)) (#match? @call.name \"^(forEach|map)$\"))" +
 		"] @keyword",
-	RegexComplexity: &RegexComplexity{
+	RegexComplexity: &languages.RegexComplexity{
 		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
 			if node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator" {
 				return

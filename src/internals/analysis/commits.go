@@ -2,6 +2,7 @@ package analysis
 
 import (
 	"CLI_App/src/internals"
+	"CLI_App/src/internals/analysis/utils"
 	"fmt"
 	"os"
 
@@ -15,8 +16,8 @@ var repo = internals.GetGitRepository()
 func FetchCommits(who string, verbose, stats bool, since, until string, commitSize bool) {
 	r, err := repo.Log(&git.LogOptions{
 		All:   true,
-		Since: validateDate(since),
-		Until: validateDate(until),
+		Since: utils.ValidateDate(since),
+		Until: utils.ValidateDate(until),
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -48,29 +49,29 @@ func FetchCommits(who string, verbose, stats bool, since, until string, commitSi
 }
 
 // ----------------------------------------------------------------------------------------
-func findContribBy(contributors map[string]*Contributor, target string) (*Contributor, error) {
+func findContribBy(contributors map[string]*utils.Contributor, target string) (*utils.Contributor, error) {
 	for _, v := range contributors {
-		if v.email == target {
+		if v.Email == target {
 			return v, nil
 		}
 	}
 	return nil, fmt.Errorf("couldn't find a contributor with that email")
 }
 
-func printContributorData(contributor *Contributor, verbose, stats, commitSize bool) {
-	fmt.Printf("- %s <%s>\n", contributor.name, contributor.email)
-	fmt.Printf("  Total of commits: %d\n", len(contributor.commits))
-	for _, c := range contributor.commits {
+func printContributorData(contributor *utils.Contributor, verbose, stats, commitSize bool) {
+	fmt.Printf("- %s <%s>\n", contributor.Name, contributor.Email)
+	fmt.Printf("  Total of commits: %d\n", len(contributor.Commits))
+	for _, c := range contributor.Commits {
 		// Calculate the number of files changed
-		totalChanges := len(c.stats)
+		totalChanges := len(c.Stats)
 		if verbose {
-			fmt.Printf("  * %s %s", c.when, c.message)
-			fmt.Printf("  Hash: %s\n", c.hash)
+			fmt.Printf("  * %s %s", c.When, c.Message)
+			fmt.Printf("  Hash: %s\n", c.Hash)
 			fmt.Printf("  Modified files: %d\n", totalChanges)
 		}
 		if commitSize {
 			addition, deletion := 0, 0
-			for _, v := range c.stats {
+			for _, v := range c.Stats {
 				addition += v.Addition
 				deletion += v.Deletion
 			}
@@ -80,7 +81,7 @@ func printContributorData(contributor *Contributor, verbose, stats, commitSize b
 		}
 		if stats {
 			fmt.Printf("  Stats:\n")
-			formatPrintStats(c.stats)
+			formatPrintStats(c.Stats)
 		}
 	}
 	fmt.Println()
@@ -97,9 +98,9 @@ func formatPrintStats(stats object.FileStats) {
 // ------------------------------------------------------------------------------------------
 
 // Function to get all the contributors and their data from a git branch (main default)
-func getContributors(iter object.CommitIter) map[string]*Contributor {
+func getContributors(iter object.CommitIter) map[string]*utils.Contributor {
 	// authors slice to save up the contributors of the project
-	var authors = make(map[string]*Contributor)
+	var authors = make(map[string]*utils.Contributor)
 	// iterate through the CommitIter
 	err := iter.ForEach(func(commit *object.Commit) error {
 		// obj create a Contributor object
@@ -108,16 +109,16 @@ func getContributors(iter object.CommitIter) map[string]*Contributor {
 		c, ok := authors[email]
 		// Executes if the user isn't on the map keys
 		if !ok {
-			commits := make([]*Commit, 0)
+			commits := make([]*utils.Commit, 0)
 			commits = append(commits, getCommitInformation(commit))
-			authors[email] = &Contributor{
-				name:    commit.Author.Name,
-				email:   commit.Author.Email,
-				commits: commits,
+			authors[email] = &utils.Contributor{
+				Name:    commit.Author.Name,
+				Email:   commit.Author.Email,
+				Commits: commits,
 			}
 			// Executes if the user email IS on the map
 		} else {
-			c.commits = append(c.commits, getCommitInformation(commit))
+			c.Commits = append(c.Commits, getCommitInformation(commit))
 		}
 		// Return nil as err
 		return nil
@@ -132,7 +133,7 @@ func getContributors(iter object.CommitIter) map[string]*Contributor {
 }
 
 // Function that receives an object.Commit and returns our Commit object filled up with the data we needed.
-func getCommitInformation(commit *object.Commit) *Commit {
+func getCommitInformation(commit *object.Commit) *utils.Commit {
 	year, month, day := commit.Author.When.Date()
 	hour, minute, sec := commit.Author.When.Clock()
 	stats, err := commit.Stats()
@@ -140,11 +141,11 @@ func getCommitInformation(commit *object.Commit) *Commit {
 		fmt.Println("Couldn´t get the stats of the commit.")
 		os.Exit(1)
 	}
-	return &Commit{
-		hash: commit.Hash,
-		when: fmt.Sprintf("%s %s %d %d %d:%d:%d",
+	return &utils.Commit{
+		Hash: commit.Hash,
+		When: fmt.Sprintf("%s %s %d %d %d:%d:%d",
 			commit.Author.When.Weekday(), month, day, year, hour, minute, sec),
-		message: commit.Message,
-		stats:   stats,
+		Message: commit.Message,
+		Stats:   stats,
 	}
 }

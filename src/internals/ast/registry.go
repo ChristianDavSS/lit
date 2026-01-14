@@ -2,6 +2,7 @@ package ast
 
 import (
 	"CLI_App/src/internals/ast/languages"
+	"CLI_App/src/internals/ast/languages/grammar"
 	"fmt"
 	"os"
 )
@@ -12,9 +13,9 @@ import (
  */
 
 var languageQueries = map[string]*languages.LanguageInformation{
-	"js":   &languages.JsLanguage,
-	"py":   &languages.PyLanguage,
-	"java": &languages.JavaLanguage,
+	"js":   &grammar.JsLanguage,
+	"py":   &grammar.PyLanguage,
+	"java": &grammar.JavaLanguage,
 }
 
 func RunParser(code []byte, language string) []*languages.FunctionData {
@@ -43,12 +44,15 @@ func RunParser(code []byte, language string) []*languages.FunctionData {
 	for i < len(functions) {
 		function := functions[i]
 		// If the functions isn't dangerous, we delete it
-		if function.TotalParams >= 5 || function.Complexity >= 10 || function.Size >= 85 {
+		if function.TotalParams <= languages.Messages["parameters"][0].Value &&
+			function.Complexity <= languages.Messages["complexity"][0].Value &&
+			int(function.Size) <= languages.Messages["size"][0].Value {
 			// If the function is dangerous, we increase the counter.
-			i++
-		} else {
 			functions = append(functions[:i], functions[i+1:]...)
+			continue
 		}
+		function.SetFunctionFeedback()
+		i++
 	}
 
 	// Return the dangerous functions on the script

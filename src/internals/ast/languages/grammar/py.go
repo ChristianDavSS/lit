@@ -1,11 +1,13 @@
-package languages
+package grammar
 
 import (
+	"CLI_App/src/internals/ast/languages"
+
 	tree "github.com/tree-sitter/go-tree-sitter"
 	pyGrammar "github.com/tree-sitter/tree-sitter-python/bindings/go"
 )
 
-var PyLanguage = LanguageInformation{
+var PyLanguage = languages.LanguageInformation{
 	Language: tree.NewLanguage(pyGrammar.Language()),
 	Queries: "(function_definition name: (identifier) @function.name " +
 		"parameters: (parameters) @function.parameters " +
@@ -22,7 +24,7 @@ var PyLanguage = LanguageInformation{
 		// List comprehension
 		"(list_comprehension body: (_) (for_in_clause left: (_) right: (_))) (if_clause (_))" +
 		"] @keyword",
-	RegexComplexity: &RegexComplexity{
+	RegexComplexity: &languages.RegexComplexity{
 		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
 			if node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment" {
 				return

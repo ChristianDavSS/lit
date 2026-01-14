@@ -19,6 +19,7 @@ type FunctionData struct {
 	TotalParams, Complexity  int
 	StartPosition            tree.Point
 	StartByte, EndByte, Size uint
+	Feedback                 string
 }
 
 // RegexComplexity - > struct made to give the parser enough data to parse our source code
@@ -41,4 +42,26 @@ func (f *FunctionData) AddInitialData(name string, totalParams int, startByte, e
 // IsTargetInRange validates the range given by another function to validate it's written on the same byte range
 func (f *FunctionData) IsTargetInRange(startByte, endByte uint) bool {
 	return f.StartByte <= startByte && f.EndByte >= endByte
+}
+
+func (f *FunctionData) SetFunctionFeedback() {
+	for key, value := range Messages {
+		var msg string
+		for _, item := range value {
+			if f.getValue(key) >= item.Value {
+				msg = item.Message
+			}
+		}
+		f.Feedback += msg
+	}
+}
+
+func (f *FunctionData) getValue(key string) int {
+	dict := map[string]int{
+		"parameters": f.TotalParams,
+		"complexity": f.Complexity,
+		"size":       int(f.Size),
+	}
+
+	return dict[key]
 }

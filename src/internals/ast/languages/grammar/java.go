@@ -1,11 +1,13 @@
-package languages
+package grammar
 
 import (
+	"CLI_App/src/internals/ast/languages"
+
 	tree "github.com/tree-sitter/go-tree-sitter"
 	javaGrammar "github.com/tree-sitter/tree-sitter-java/bindings/go"
 )
 
-var JavaLanguage = LanguageInformation{
+var JavaLanguage = languages.LanguageInformation{
 	Language: tree.NewLanguage(javaGrammar.Language()),
 	Queries:
 	// Method definition
@@ -21,7 +23,7 @@ var JavaLanguage = LanguageInformation{
 		"((binary_expression left: (_) right: (_)) @bin_exp (#match? @bin_exp \".*(&&|[|]{2}).*\"))" +
 		"(switch_block_statement_group) (catch_clause)" +
 		"] @keyword",
-	RegexComplexity: &RegexComplexity{
+	RegexComplexity: &languages.RegexComplexity{
 		ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
 			// Search the 'alternative' node in the children
 			alternative := node.Node.ChildByFieldName("alternative")

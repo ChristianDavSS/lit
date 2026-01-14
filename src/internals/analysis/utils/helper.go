@@ -1,4 +1,4 @@
-package analysis
+package utils
 
 import (
 	"fmt"
@@ -14,19 +14,19 @@ import (
 
 // Contributor type: Struct to save up all the Author data.
 type Contributor struct {
-	name, email string
-	commits     []*Commit
+	Name, Email string
+	Commits     []*Commit
 }
 
 // Commit struct: Struct to save up all the commit information.
 type Commit struct {
-	hash          plumbing.Hash
-	when, message string
-	stats         object.FileStats
+	Hash          plumbing.Hash
+	When, Message string
+	Stats         object.FileStats
 }
 
-// Function to validate dates and show feedback if needed. (since, until flags)
-func validateDate(date string) *time.Time {
+// ValidateDate Function to validate dates and show feedback if needed. (since, until flags)
+func ValidateDate(date string) *time.Time {
 	if len(date) != 10 {
 		if len(date) > 0 {
 			fmt.Printf("error with the date format")
@@ -43,8 +43,8 @@ func validateDate(date string) *time.Time {
 	return &d
 }
 
-// matchRegex function: Takes a target string and compares it to a regex pattern, returning the match result
-func matchRegex(target, pattern string) bool {
+// MatchRegex function: Takes a target string and compares it to a regex pattern, returning the match result
+func MatchRegex(target, pattern string) bool {
 	match, err := regexp.MatchString(pattern, target)
 	if err != nil {
 		os.Exit(1)
