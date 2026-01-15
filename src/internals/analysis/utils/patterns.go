@@ -4,7 +4,7 @@ package utils
 
 // ScanValidScriptPattern for the regex that validates scripts for the scanner.
 // Only contains the languages supported for scanning
-var ScanValidScriptPattern = "^[a-zA-Z0-9._-]+\\.(py|js|java)$"
+var ScanValidScriptPattern = "^[a-zA-Z0-9._-]+\\.(py|js|java|jsx|go)$"
 
 // LocValidScriptPattern validates the scripts for the loc.
 var LocValidScriptPattern = "^[a-zA-Z0-9._-]+\\.(py|go|java|js|jsx|dart|c|cpp|css|html|ts|md)$"
