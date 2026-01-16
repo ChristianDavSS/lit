@@ -1,6 +1,7 @@
 package grammar
 
 import (
+	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
@@ -9,9 +10,17 @@ import (
 
 var PyLanguage = languages.LanguageInformation{
 	Language: tree.NewLanguage(pyGrammar.Language()),
-	Queries: "(function_definition name: (identifier) @function.name " +
+	Queries:
+	// Function definition
+	"(function_definition name: (identifier) @function.name " +
 		"parameters: (parameters) @function.parameters " +
 		"body: (block) @function.body) @function " +
+		// Variable names
+		"(assignment left: ([(identifier) @variable.name (pattern_list (identifier) @variable.name)])" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(for_statement left: ([(identifier) @variable.name (pattern_list (identifier) @variable.name)])" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		// Keywords
 		"[" +
 		// If, else-if, else
 		"(if_statement condition: (_)) (elif_clause condition: (_)) (else_clause body: (_))" +

@@ -1,6 +1,7 @@
 package grammar
 
 import (
+	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
@@ -14,6 +15,12 @@ var GoLanguage = languages.LanguageInformation{
 	"(function_declaration name: (_) @function.name " +
 		"parameters: (_) @function.parameters " +
 		"body: (_) @function.body ) @function " +
+		// Variable names
+		"(expression_list (identifier) @variable.name" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(var_declaration (var_spec name: (identifier) @variable.name)" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		// Keywords
 		"[" +
 		"(if_statement) (for_statement) (expression_case)" +
 		// Binary expressions

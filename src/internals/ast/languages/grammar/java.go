@@ -1,7 +1,9 @@
 package grammar
 
 import (
+	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
+	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	javaGrammar "github.com/tree-sitter/tree-sitter-java/bindings/go"
@@ -14,9 +16,15 @@ var JavaLanguage = languages.LanguageInformation{
 	"(method_declaration type: (_) name: (_) @function.name " +
 		"parameters: (formal_parameters) @function.parameters " +
 		"body: (block) @function.body ) @function " +
+		// Variable names
+		"(variable_declarator name: (identifier) @variable.name " +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(enhanced_for_statement name: (identifier) @variable.name " +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		// Keywords (+1 complexity)
 		"[" +
 		// Loops
-		"(for_statement) (while_statement) (do_statement)" +
+		"(for_statement) (while_statement) (do_statement) (enhanced_for_statement)" +
 		// If, else-if, else
 		"(if_statement condition: (_) consequence: (_) alternative: (_)?) (ternary_expression)" +
 		// Expressions
@@ -26,6 +34,7 @@ var JavaLanguage = languages.LanguageInformation{
 	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
 		// Search the 'alternative' node in the children
 		alternative := node.Node.ChildByFieldName("alternative")
+		fmt.Println(captureNames[node.Index], string(code[node.Node.StartByte():node.Node.EndByte()]))
 		switch {
 		case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 			return

@@ -1,6 +1,7 @@
 package grammar
 
 import (
+	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
@@ -22,6 +23,11 @@ var JsLanguage = languages.LanguageInformation{
 		"(method_definition name: (property_identifier) @function.name " +
 		"parameters: (formal_parameters) @function.parameters " +
 		"body: (_) @function.body ) @function" +
+		// Variable names
+		"(variable_declarator name: ([(identifier) @variable.name (array_pattern (identifier) @variable.name)])" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(for_in_statement left: ([(identifier) @variable.name (array_pattern (identifier) @variable.name)])" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
 		// Functions body information (keywords)
 		"[" +
 		// if, else-if, else
