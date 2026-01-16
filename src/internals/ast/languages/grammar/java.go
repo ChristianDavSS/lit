@@ -3,7 +3,6 @@ package grammar
 import (
 	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
-	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	javaGrammar "github.com/tree-sitter/tree-sitter-java/bindings/go"
@@ -31,16 +30,15 @@ var JavaLanguage = languages.LanguageInformation{
 		"((binary_expression left: (_) right: (_)) @bin_exp (#match? @bin_exp \".*(&&|[|]{2}).*\"))" +
 		"(switch_block_statement_group) (catch_clause)" +
 		"] @keyword",
-	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
+	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *languages.FunctionData) {
 		// Search the 'alternative' node in the children
 		alternative := node.Node.ChildByFieldName("alternative")
-		fmt.Println(captureNames[node.Index], string(code[node.Node.StartByte():node.Node.EndByte()]))
 		switch {
 		case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 			return
 		case alternative != nil && alternative.GrammarName() == "block":
-			*complexity++
+			nodeInfo.Complexity++
 		}
-		*complexity++
+		nodeInfo.Complexity++
 	},
 }

@@ -10,7 +10,7 @@ import tree "github.com/tree-sitter/go-tree-sitter"
 type LanguageInformation struct {
 	Language   *tree.Language
 	Queries    string
-	ManageNode func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int)
+	ManageNode func(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *FunctionData)
 }
 
 // FunctionData - > struct made to register all the data returned by the parser and save it

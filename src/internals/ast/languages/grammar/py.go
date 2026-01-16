@@ -33,10 +33,10 @@ var PyLanguage = languages.LanguageInformation{
 		// List comprehension
 		"(list_comprehension body: (_) (for_in_clause left: (_) right: (_))) (if_clause (_))" +
 		"] @keyword",
-	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
+	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *languages.FunctionData) {
 		if node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment" {
 			return
 		}
-		*complexity++
+		nodeInfo.Complexity++
 	},
 }

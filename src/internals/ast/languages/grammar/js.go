@@ -40,12 +40,12 @@ var JsLanguage = languages.LanguageInformation{
 		"(ternary_expression)" +
 		// ForEach, Map, etc.
 		"(call_expression function: (member_expression object: (_) property: (_) @call.name)" +
-		"arguments: (arguments (arrow_function)) (#match? @call.name \"^(forEach|map)$\"))" +
+		"arguments: (arguments (arrow_function)) (#match? @call.name \"^(forEach)$\"))" +
 		"] @keyword",
-	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
+	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *languages.FunctionData) {
 		if node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator" {
 			return
 		}
-		*complexity++
+		nodeInfo.Complexity++
 	},
 }

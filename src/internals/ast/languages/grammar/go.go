@@ -26,15 +26,15 @@ var GoLanguage = languages.LanguageInformation{
 		// Binary expressions
 		"((binary_expression left: (_) right: (_)) @bin_exp (#match? @bin_exp \".*(&&|[|]{2}).*\"))" +
 		"] @keyword",
-	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, complexity *int) {
+	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *languages.FunctionData) {
 		// Search the 'alternative' node in the children
 		alternative := node.Node.ChildByFieldName("alternative")
 		switch {
 		case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "expression_list":
 			return
 		case alternative != nil && alternative.GrammarName() == "block":
-			*complexity++
+			nodeInfo.Complexity++
 		}
-		*complexity++
+		nodeInfo.Complexity++
 	},
 }
