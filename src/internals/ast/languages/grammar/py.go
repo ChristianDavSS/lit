@@ -3,6 +3,7 @@ package grammar
 import (
 	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
+	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	pyGrammar "github.com/tree-sitter/tree-sitter-python/bindings/go"
@@ -34,7 +35,14 @@ var PyLanguage = languages.LanguageInformation{
 		"(list_comprehension body: (_) (for_in_clause left: (_) right: (_))) (if_clause (_))" +
 		"] @keyword",
 	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *languages.FunctionData) {
-		if node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment" {
+		switch {
+		case captureNames[node.Index] == "variable.name":
+			nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
+				string(code[node.Node.StartByte():node.Node.EndByte()]),
+				node.Node.StartPosition().Row, node.Node.StartPosition().Column,
+			)
+			return
+		case node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment":
 			return
 		}
 		nodeInfo.Complexity++

@@ -43,7 +43,8 @@ var JsLanguage = languages.LanguageInformation{
 		"arguments: (arguments (arrow_function)) (#match? @call.name \"^(forEach)$\"))" +
 		"] @keyword",
 	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *languages.FunctionData) {
-		if node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator" {
+		switch {
+		case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 			return
 		}
 		nodeInfo.Complexity++
