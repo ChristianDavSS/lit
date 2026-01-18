@@ -18,9 +18,9 @@ var GoLanguage = languages.LanguageInformation{
 		"body: (_) @function.body ) @function " +
 		// Variable names
 		"(expression_list (identifier) @variable.name" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
 		"(var_declaration (var_spec name: (identifier) @variable.name)" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
 		// Keywords
 		"[" +
 		"(if_statement) (for_statement) (expression_case)" +

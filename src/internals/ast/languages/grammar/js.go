@@ -26,9 +26,9 @@ var JsLanguage = languages.LanguageInformation{
 		"body: (_) @function.body ) @function" +
 		// Variable names
 		"(variable_declarator name: ([(identifier) @variable.name (array_pattern (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
 		"(for_in_statement left: ([(identifier) @variable.name (array_pattern (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
 		// Functions body information (keywords)
 		"[" +
 		// if, else-if, else

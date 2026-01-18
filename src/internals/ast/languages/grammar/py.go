@@ -19,9 +19,9 @@ var PyLanguage = languages.LanguageInformation{
 		"body: (block) @function.body) @function " +
 		// Variable names
 		"(assignment left: ([(identifier) @variable.name (pattern_list (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
 		"(for_statement left: ([(identifier) @variable.name (pattern_list (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
 		// Keywords
 		"[" +
 		// If, else-if, else

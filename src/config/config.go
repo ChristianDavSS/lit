@@ -13,7 +13,7 @@ type Config struct {
 	NamingConvention string `json:"activeNamingConvention"`
 }
 
-var ActiveNamingConvention string
+var ActiveConfig *Config
 var ConfigPath string
 
 // osClear - > Takes the name of the os and returns the command lines to clear the stdout.
@@ -59,13 +59,10 @@ func SetNewConfig(newConfig Config) {
 // LoadDefaultConfig - > Used to load the default values from the JSON config file.
 func LoadDefaultConfig() {
 	file := ReadConfigJSON()
-	var res Config
-	err := json.Unmarshal(file, &res)
+	err := json.Unmarshal(file, &ActiveConfig)
 	if err != nil {
 		os.Exit(1)
 	}
-	// Set the file config as the current config
-	ActiveNamingConvention = res.NamingConvention
 }
 
 func ReadConfigJSON() []byte {
@@ -80,4 +77,14 @@ func ReadConfigJSON() []byte {
 		os.Exit(1)
 	}
 	return file
+}
+
+// GetActiveNamingConvention function: gets the active naming convention from the current configuration file
+func GetActiveNamingConvention() string {
+	// If the 'ActiveConfig' variable is nil, we set a value to it
+	if ActiveConfig == nil {
+		LoadDefaultConfig()
+	}
+
+	return ActiveConfig.NamingConvention
 }

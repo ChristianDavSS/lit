@@ -18,9 +18,9 @@ var JavaLanguage = languages.LanguageInformation{
 		"body: (block) @function.body ) @function " +
 		// Variable names
 		"(variable_declarator name: (identifier) @variable.name " +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
 		"(enhanced_for_statement name: (identifier) @variable.name " +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
 		// Keywords (+1 complexity)
 		"[" +
 		// Loops
