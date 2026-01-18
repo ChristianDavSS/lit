@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 // Config struct used to code/decode the JSON file.
@@ -73,7 +74,7 @@ func ReadConfigJSON() []byte {
 		os.Exit(1)
 	}
 
-	ConfigPath = path[:len(path)-7] + "config.json"
+	ConfigPath = filepath.Dir(path) + "/config.json"
 	file, err := os.ReadFile(ConfigPath)
 	if err != nil {
 		os.Exit(1)
