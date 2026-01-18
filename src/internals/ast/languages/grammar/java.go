@@ -4,6 +4,7 @@ import (
 	"CLI_App/src/config"
 	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
+	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	javaGrammar "github.com/tree-sitter/tree-sitter-java/bindings/go"
@@ -35,6 +36,12 @@ var JavaLanguage = languages.LanguageInformation{
 		// Search the 'alternative' node in the children
 		alternative := node.Node.ChildByFieldName("alternative")
 		switch {
+		case captureNames[node.Index] == "variable.name":
+			nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
+				string(code[node.Node.StartByte():node.Node.EndByte()]),
+				node.Node.StartPosition().Row, node.Node.StartPosition().Column,
+			)
+			return
 		case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 			return
 		case alternative != nil && alternative.GrammarName() == "block":

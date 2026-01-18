@@ -5,27 +5,10 @@ import (
 	"os"
 	"regexp"
 	"time"
-
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 // helper.go - > File that keeps all reusable functions and types of analysis/*.
 
-// Contributor type: Struct to save up all the Author data.
-type Contributor struct {
-	Name, Email string
-	Commits     []*Commit
-}
-
-// Commit struct: Struct to save up all the commit information.
-type Commit struct {
-	Hash          plumbing.Hash
-	When, Message string
-	Stats         object.FileStats
-}
-
-// Directory struct: Saves up the dir data (for the DFS)
 type Directory struct {
 	DirName string
 	Content []os.DirEntry
@@ -35,14 +18,14 @@ type Directory struct {
 func ValidateDate(date string) *time.Time {
 	if len(date) != 10 {
 		if len(date) > 0 {
-			fmt.Printf("error with the date format")
+			fmt.Fprintln(os.Stderr, "error with the date format")
 		}
 		return nil
 	}
 	d, err := time.Parse("02/01/2006", date)
 	if err != nil {
 		if len(date) > 0 {
-			fmt.Printf("error parsing the date. %s", err)
+			fmt.Fprintf(os.Stderr, "error parsing the date. %s\n", err)
 		}
 		return nil
 	}

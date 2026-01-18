@@ -23,13 +23,13 @@ var languageQueries = map[string]*languages.LanguageInformation{
 func RunParser(code []byte, language string) []*languages.FunctionData {
 	languageInfo, ok := languageQueries[language]
 	if !ok {
-		fmt.Println("Error with the language: not supported yet.")
+		fmt.Fprintln(os.Stderr, "Error with the language: not supported yet.")
 		os.Exit(1)
 	}
 	// Get our ast bases in our code and grammar
 	ast, err := GetAST(code, languageInfo.Language)
 	if err != nil {
-		fmt.Println("Error getting the AST for the language. Do you have a 64x C compiler installed?")
+		fmt.Fprintln(os.Stderr, "Error getting the AST for the language. Do you have a 64x C compiler installed?")
 		os.Exit(1)
 	}
 	// Get the root node (program) from the AST generated
@@ -46,7 +46,8 @@ func RunParser(code []byte, language string) []*languages.FunctionData {
 		// If the functions isn't dangerous, we delete it
 		if function.TotalParams <= languages.Messages["parameters"][0].Value &&
 			function.Complexity <= languages.Messages["complexity"][0].Value &&
-			int(function.Size) <= languages.Messages["size"][0].Value {
+			int(function.Size) <= languages.Messages["size"][0].Value &&
+			function.Feedback == "" {
 			// If the function is dangerous, we increase the counter.
 			functions = append(functions[:i], functions[i+1:]...)
 			continue

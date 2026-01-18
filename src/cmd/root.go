@@ -20,13 +20,12 @@ var root = &cobra.Command{
 // Execute function to execute some code
 func Execute() {
 	// Add commands to the root
-	root.AddCommand(commands.FetchCommits())
 	root.AddCommand(commands.Files())
 	root.AddCommand(commands.Configuration())
 
 	// Execute the root, registering all the children commands
 	if err := root.Execute(); err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	// End the execution

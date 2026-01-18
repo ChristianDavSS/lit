@@ -3,6 +3,7 @@ package ast
 import (
 	"CLI_App/src/internals/ast/languages"
 	"fmt"
+	"os"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 )
@@ -28,7 +29,8 @@ func GetCapturesByQueries(language *tree.Language, queries string, code []byte, 
 	// Create a query to extract the data we need
 	query, err := tree.NewQuery(language, queries)
 	if err != nil {
-		fmt.Println("Error parsing - >", err)
+		fmt.Fprintln(os.Stderr, "Error parsing", err)
+		os.Exit(1)
 	}
 
 	// Create a query cursor for our custom query (just to keep the necessary data)

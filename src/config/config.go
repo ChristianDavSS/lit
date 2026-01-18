@@ -40,6 +40,7 @@ func clearScreen(name string, args ...string) {
 	// Run the command
 	err := cmd.Run()
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error running the command to clear your screen.")
 		os.Exit(1)
 	}
 }
@@ -48,10 +49,12 @@ func clearScreen(name string, args ...string) {
 func SetNewConfig(newConfig Config) {
 	byteData, err := json.Marshal(newConfig)
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error parsing the struct data into json.")
 		os.Exit(1)
 	}
 	err = os.WriteFile(ConfigPath, byteData, 0644)
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error writing the data into the config file...")
 		os.Exit(1)
 	}
 }
@@ -61,6 +64,7 @@ func LoadDefaultConfig() {
 	file := ReadConfigJSON()
 	err := json.Unmarshal(file, &ActiveConfig)
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error reading the config file...")
 		os.Exit(1)
 	}
 }
@@ -68,12 +72,14 @@ func LoadDefaultConfig() {
 func ReadConfigJSON() []byte {
 	path, err := os.Executable()
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error getting the .exe path name")
 		os.Exit(1)
 	}
 
 	ConfigPath = filepath.Dir(path) + "/config.json"
 	file, err := os.ReadFile(ConfigPath)
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "Couldn't read the config file (is it in '"+ConfigPath+"'?)")
 		os.Exit(1)
 	}
 	return file

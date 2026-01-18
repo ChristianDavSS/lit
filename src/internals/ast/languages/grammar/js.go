@@ -4,6 +4,7 @@ import (
 	"CLI_App/src/config"
 	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
+	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	jsGrammar "github.com/tree-sitter/tree-sitter-javascript/bindings/go"
@@ -45,6 +46,12 @@ var JsLanguage = languages.LanguageInformation{
 		"] @keyword",
 	ManageNode: func(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *languages.FunctionData) {
 		switch {
+		case captureNames[node.Index] == "variable.name":
+			nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
+				string(code[node.Node.StartByte():node.Node.EndByte()]),
+				node.Node.StartPosition().Row, node.Node.StartPosition().Column,
+			)
+			return
 		case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 			return
 		}

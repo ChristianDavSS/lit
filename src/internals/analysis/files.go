@@ -25,7 +25,7 @@ var DangerousFunctions = make(map[string][]*languages.FunctionData)
 func Files(locFlag bool) {
 	files, err := os.ReadDir(internals.GetWorkingDirectory())
 	if err != nil {
-		fmt.Println("Error reading the structure: ", err)
+		fmt.Fprintln(os.Stderr, "Error reading the file structure: ", err)
 		os.Exit(1)
 	}
 	if locFlag {
@@ -113,7 +113,7 @@ func traverseFiles(initialFiles []os.DirEntry, fileFunction func(filename string
 				fmt.Println("Reading", files.DirName+v.Name()+"/")
 				dir, err := os.ReadDir(files.DirName + v.Name() + "/")
 				if err != nil {
-					fmt.Println("Error reading the directory...")
+					fmt.Fprintln(os.Stderr, "Error reading the directory...")
 					os.Exit(1)
 				}
 				stack = append(stack, utils.Directory{DirName: files.DirName + v.Name() + "/", Content: dir})
@@ -124,7 +124,7 @@ func traverseFiles(initialFiles []os.DirEntry, fileFunction func(filename string
 				}
 				file, err := os.ReadFile(files.DirName + v.Name())
 				if err != nil {
-					fmt.Printf("Error reading the file %s. Please report the issue.\n", files.DirName+v.Name())
+					fmt.Fprintf(os.Stderr, "Error reading the file %s. Please report the issue.\n", files.DirName+v.Name())
 					os.Exit(1)
 				}
 				wg.Add(1)
