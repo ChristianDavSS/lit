@@ -22,6 +22,7 @@ func Execute() {
 	// Add commands to the root
 	root.AddCommand(commands.FetchCommits())
 	root.AddCommand(commands.Files())
+	root.AddCommand(commands.Configuration())
 
 	// Execute the root, registering all the children commands
 	if err := root.Execute(); err != nil {

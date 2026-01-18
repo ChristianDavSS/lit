@@ -1,6 +1,7 @@
 package grammar
 
 import (
+	"CLI_App/src/config"
 	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
 
@@ -17,9 +18,9 @@ var GoLanguage = languages.LanguageInformation{
 		"body: (_) @function.body ) @function " +
 		// Variable names
 		"(expression_list (identifier) @variable.name" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
 		"(var_declaration (var_spec name: (identifier) @variable.name)" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
 		// Keywords
 		"[" +
 		"(if_statement) (for_statement) (expression_case)" +

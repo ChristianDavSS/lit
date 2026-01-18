@@ -1,6 +1,7 @@
 package grammar
 
 import (
+	"CLI_App/src/config"
 	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
 
@@ -17,9 +18,9 @@ var JavaLanguage = languages.LanguageInformation{
 		"body: (block) @function.body ) @function " +
 		// Variable names
 		"(variable_declarator name: (identifier) @variable.name " +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
 		"(enhanced_for_statement name: (identifier) @variable.name " +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
 		// Keywords (+1 complexity)
 		"[" +
 		// Loops

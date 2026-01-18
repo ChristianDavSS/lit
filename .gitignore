@@ -1,5 +1,3 @@
-myapp
-myapp.exe
-
+*.exe
 .idea
 .git

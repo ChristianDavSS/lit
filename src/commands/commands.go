@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"CLI_App/src/config"
 	internal "CLI_App/src/internals/analysis"
 	"time"
 
@@ -47,4 +48,14 @@ func Files() *cobra.Command {
 	command.Flags().Bool("loc", false, "Retrieves the languages used with statistics")
 
 	return command
+}
+
+func Configuration() *cobra.Command {
+	return &cobra.Command{
+		Use:   "scan-config",
+		Short: "Configurate the scan variables.",
+		Run: func(cmd *cobra.Command, args []string) {
+			config.Init()
+		},
+	}
 }

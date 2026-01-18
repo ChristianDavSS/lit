@@ -1,6 +1,7 @@
 package grammar
 
 import (
+	"CLI_App/src/config"
 	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
 
@@ -25,9 +26,9 @@ var JsLanguage = languages.LanguageInformation{
 		"body: (_) @function.body ) @function" +
 		// Variable names
 		"(variable_declarator name: ([(identifier) @variable.name (array_pattern (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
 		"(for_in_statement left: ([(identifier) @variable.name (array_pattern (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
 		// Functions body information (keywords)
 		"[" +
 		// if, else-if, else

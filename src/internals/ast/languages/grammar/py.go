@@ -1,6 +1,7 @@
 package grammar
 
 import (
+	"CLI_App/src/config"
 	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
 	"fmt"
@@ -18,9 +19,9 @@ var PyLanguage = languages.LanguageInformation{
 		"body: (block) @function.body) @function " +
 		// Variable names
 		"(assignment left: ([(identifier) @variable.name (pattern_list (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
 		"(for_statement left: ([(identifier) @variable.name (pattern_list (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + utils.CamelCase + "\"))" +
+		"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActiveNamingConvention + "\"))" +
 		// Keywords
 		"[" +
 		// If, else-if, else
