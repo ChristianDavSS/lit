@@ -1,7 +1,7 @@
 package config
 
 import (
-	patterns "CLI_App/src/internals/analysis/utils"
+	patterns "CLI_App/src/internals/utils"
 	"fmt"
 	"runtime"
 

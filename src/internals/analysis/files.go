@@ -1,10 +1,9 @@
 package analysis
 
 import (
-	"CLI_App/src/internals"
-	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast"
 	"CLI_App/src/internals/ast/languages"
+	"CLI_App/src/internals/utils"
 	"fmt"
 	"os"
 	"regexp"
@@ -23,11 +22,7 @@ var DangerousFunctions = make(map[string][]*languages.FunctionData)
 
 // Files - > Entry point for the command line with the flags
 func Files(locFlag bool) {
-	files, err := os.ReadDir(internals.GetWorkingDirectory())
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error reading the file structure: ", err)
-		os.Exit(1)
-	}
+	files := utils.GetDirEntries(utils.GetWorkingDirectory())
 	if locFlag {
 		loc(files)
 		return
@@ -97,7 +92,7 @@ func fileScanner(filename string, code []byte) {
 
 // Navigate through the file system with a DFS algorithm.
 func traverseFiles(initialFiles []os.DirEntry, fileFunction func(filename string, code []byte), validScriptPattern string) {
-	stack := []utils.Directory{{"", initialFiles}}
+	stack := []Directory{{"", initialFiles}}
 	for len(stack) > 0 {
 		// Extract the last element from the stack
 		files := stack[len(stack)-1]
@@ -116,7 +111,7 @@ func traverseFiles(initialFiles []os.DirEntry, fileFunction func(filename string
 					fmt.Fprintln(os.Stderr, "Error reading the directory...")
 					os.Exit(1)
 				}
-				stack = append(stack, utils.Directory{DirName: files.DirName + v.Name() + "/", Content: dir})
+				stack = append(stack, Directory{DirName: files.DirName + v.Name() + "/", Content: dir})
 			} else {
 				// Check if the current file is a programming language script
 				if r, _ := regexp.Match(validScriptPattern, []byte(v.Name())); !r {

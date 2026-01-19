@@ -2,8 +2,8 @@ package grammar
 
 import (
 	"CLI_App/src/config"
-	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
+	"CLI_App/src/internals/utils"
 	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
@@ -42,6 +42,7 @@ var PyLanguage = languages.LanguageInformation{
 				string(code[node.Node.StartByte():node.Node.EndByte()]),
 				node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 			)
+			utils.ModifyVariableName(node.Node, "main.py")
 			return
 		case node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment":
 			return

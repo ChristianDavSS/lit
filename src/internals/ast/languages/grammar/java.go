@@ -2,8 +2,8 @@ package grammar
 
 import (
 	"CLI_App/src/config"
-	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast/languages"
+	"CLI_App/src/internals/utils"
 	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
