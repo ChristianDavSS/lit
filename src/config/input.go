@@ -17,7 +17,7 @@ func getNamingConvention() string {
 		1: patterns.LowerCamelCase,
 		2: patterns.UpperCamelCase,
 		3: patterns.CamelCase,
-		4: patterns.SneakCase,
+		4: patterns.SnakeCase,
 	}
 
 	// Ask the user for a valid input n times
@@ -27,7 +27,7 @@ func getNamingConvention() string {
 		color.Red("[1] camelCase")
 		color.Magenta("[2] CamelCase")
 		color.Blue("[3] CamelCase/camelCase (for languages like Go)")
-		color.Cyan("[4] sneak_case")
+		color.Cyan("[4] snake_case")
 		fmt.Scanf("%d", &selectedConvention)
 	}
 
