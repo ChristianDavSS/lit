@@ -12,12 +12,12 @@ import (
  * config for their parsing and analysis. Also, contains methods to manage the Functions...
  */
 
-var languageQueries = map[string]*languages.LanguageInformation{
-	"js":   &grammar.JsLanguage,
-	"jsx":  &grammar.JsLanguage,
-	"py":   &grammar.PyLanguage,
-	"java": &grammar.JavaLanguage,
-	"go":   &grammar.GoLanguage,
+var languageQueries = map[string]languages.NodeManagement{
+	"js":   grammar.JsLanguage,
+	"jsx":  grammar.JsLanguage,
+	"py":   grammar.PythonData,
+	"java": grammar.JavaLanguage,
+	"go":   grammar.GoLanguage,
 }
 
 func RunParser(code []byte, language string) []*languages.FunctionData {
@@ -26,18 +26,9 @@ func RunParser(code []byte, language string) []*languages.FunctionData {
 		fmt.Fprintln(os.Stderr, "Error with the language: not supported yet.")
 		os.Exit(1)
 	}
-	// Get our ast bases in our code and grammar
-	ast, err := GetAST(code, languageInfo.Language)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error getting the AST for the language. Do you have a 64x C compiler installed?")
-		os.Exit(1)
-	}
-	// Get the root node (program) from the AST generated
-	root := ast.RootNode()
-	defer ast.Close()
 
 	// Find the cyclical complexity of the functions
-	functions := CyclicalComplexity(languageInfo.Language, languageInfo.Queries, root, code, languageInfo.ManageNode)
+	functions := CyclicalComplexity(languageInfo, code)
 
 	// Remove the 'normal' functions from the list, keeping the dangerous ones.
 	i := 0

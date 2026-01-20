@@ -6,11 +6,17 @@ import tree "github.com/tree-sitter/go-tree-sitter"
  * language.go: Definition of all the types used in the parsing
  */
 
-// LanguageInformation - > struct made to register the language an all it's complements (used by the parser)
-type LanguageInformation struct {
-	Language   *tree.Language
-	Queries    string
-	ManageNode func(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *FunctionData)
+// LanguageData - > struct made to register the language an all it's complements (used by the parser)
+type LanguageData struct {
+	Language *tree.Language
+	Queries  string
+}
+
+// NodeManagement defines the functions every language struct uses
+type NodeManagement interface {
+	ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *FunctionData)
+	GetLanguage() *tree.Language
+	GetQueries() string
 }
 
 // FunctionData - > struct made to register all the data returned by the parser and save it
