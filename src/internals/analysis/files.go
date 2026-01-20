@@ -106,22 +106,14 @@ func traverseFiles(initialFiles []os.DirEntry, fileFunction func(filename string
 					continue
 				}
 				fmt.Println("Reading", files.DirName+v.Name()+"/")
-				dir, err := os.ReadDir(files.DirName + v.Name() + "/")
-				if err != nil {
-					fmt.Fprintln(os.Stderr, "Error reading the directory...")
-					os.Exit(1)
-				}
+				dir := utils.GetDirEntries(files.DirName + v.Name() + "/")
 				stack = append(stack, Directory{DirName: files.DirName + v.Name() + "/", Content: dir})
 			} else {
 				// Check if the current file is a programming language script
 				if r, _ := regexp.Match(validScriptPattern, []byte(v.Name())); !r {
 					continue
 				}
-				file, err := os.ReadFile(files.DirName + v.Name())
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Error reading the file %s. Please report the issue.\n", files.DirName+v.Name())
-					os.Exit(1)
-				}
+				file := utils.ReadFile(files.DirName + v.Name())
 				wg.Add(1)
 				go fileFunction(files.DirName+v.Name(), file)
 			}

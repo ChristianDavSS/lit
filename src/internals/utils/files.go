@@ -3,8 +3,6 @@ package utils
 import (
 	"fmt"
 	"os"
-
-	tree "github.com/tree-sitter/go-tree-sitter"
 )
 
 /*
@@ -34,42 +32,11 @@ func GetWorkingDirectory() string {
 	return path
 }
 
-// ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
-func ModifyVariableName(node tree.Node, path string) {
-	// Read the file with the given path
-	file, _ := os.ReadFile(path)
-
-	// While it finds a valid index for the substring, we'll keep iterating
-	for {
-		fmt.Println(string(file[node.StartByte():node.EndByte()]))
-		indexes := findSeparatorIndexes(string(file[node.StartByte():node.EndByte()]))
-		modifyVariableName(indexes, file[node.StartByte():node.EndByte()])
-		break
-	}
-	// Write the new code into the file (just with the modified lines)
-	/*err := os.WriteFile("main.py", []byte(strings.Join(lines, "\n")), 0644)
+func ReadFile(name string) []byte {
+	file, err := os.ReadFile(name)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error trying to write the variable name into the file...")
+		fmt.Fprintf(os.Stderr, "Error reading the file %s. Please report the issue.\n", name)
 		os.Exit(1)
-	}*/
-}
-
-func findSeparatorIndexes(line string) []int16 {
-	var indexes []int16
-
-	// Traverse the string
-	for i, ch := range line {
-		// Find if the value is in the upper letters range or if it's an underscore
-		if ch >= 65 && ch <= 90 || ch == 95 {
-			indexes = append(indexes, int16(i))
-		}
 	}
-
-	return indexes
-}
-
-func modifyVariableName(indexes []int16, line []byte) []byte {
-	currentNamingConv := "camelCase"
-	fmt.Println(currentNamingConv)
-	return []byte("")
+	return file
 }

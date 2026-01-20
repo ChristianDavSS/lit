@@ -42,7 +42,7 @@ var PyLanguage = languages.LanguageInformation{
 				string(code[node.Node.StartByte():node.Node.EndByte()]),
 				node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 			)
-			utils.ModifyVariableName(node.Node, "main.py")
+			utils.ModifyVariableName(node.Node, code, "main.py")
 			return
 		case node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment":
 			return
