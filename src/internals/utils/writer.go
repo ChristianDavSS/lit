@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
@@ -24,13 +25,16 @@ func ModifyVariableName(node tree.Node, code []byte, filePath string) {
 	// with the indexes, separate the line into valid tokens
 	tokens := getTokens(upperIndexes, currentVarName)
 	newVarName := refactorVarName(tokens)
-	fmt.Println(newVarName)
+
+	// modify just the line of code we need to.
+	code = append(append(code[:node.StartByte()], newVarName...), code[node.EndByte():]...)
+
 	// Write the new code into the file (just with the modified lines)
-	/*err := os.WriteFile("main.py", []byte(strings.Join(lines, "\n")), 0644)
+	err := os.WriteFile("main.py", code, 0644)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error trying to write the variable name into the file...")
 		os.Exit(1)
-	}*/
+	}
 }
 
 // ---- Writing on files and renaming ----
@@ -82,5 +86,18 @@ func getTokens(upperIndexes []int16, line string) []string {
 
 // refactorVarName: with the strings split in tokens, returns a []byte of the new line of code.
 func refactorVarName(tokens []string) []byte {
-	return []byte("")
+	var selected int8 = 3
+	var newName string = tokens[0]
+
+	switch selected {
+	case 3:
+		for _, token := range tokens[1:] {
+			newName += string(token[0]-32) + token[1:]
+		}
+	case 4:
+		for _, token := range tokens[1:] {
+			newName += "_" + token
+		}
+	}
+	return []byte(newName)
 }
