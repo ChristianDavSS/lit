@@ -5,6 +5,7 @@ import (
 	languages "CLI_App/src/internals/ast/utils"
 	"CLI_App/src/internals/utils"
 	"fmt"
+	"os"
 	"strings"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
@@ -30,9 +31,10 @@ func ModifyVariableName(management languages.NodeManagement, node tree.Node, cod
 	upperIndexes := getSeparatorIndexes(currentVarName)
 	// with the indexes, separate the line into valid tokens
 	tokens := getTokens(upperIndexes, currentVarName)
+	// get the new variable name (according to the current naming conventions selected)
 	newVarName := refactorVarName(tokens)
-	fmt.Println(string(newVarName), currentVarName)
 
+	// get the query, cursor and captures (applying the query to fetch them)
 	root := parser.GetAST(code, management.GetLanguage())
 	defer root.Close()
 	query, cursor, captures := parser.GetCapturesByQueries(management.GetLanguage(),
@@ -40,33 +42,44 @@ func ModifyVariableName(management languages.NodeManagement, node tree.Node, cod
 	defer query.Close()
 	defer cursor.Close()
 
-	index := make(map[uint]string)
-	splitedCode := strings.Split(string(code), "\n")
+	// cache of the sum of the difference between lengths of the variables
+	diff := make(map[uint]uint)
+	// slice the code into lines (just as the script
+	slicedCode := strings.Split(string(code), "\n")
 
+	// loop through the node captures
 	for {
+		// get the next match
 		match := captures.Next()
 		if match == nil {
 			break
 		}
-		copyOf := *match
-		node = copyOf.Captures[0].Node
-		str := splitedCode[node.StartPosition().Row]
-
-		s, ok := index[node.StartPosition().Row]
+		// get the node from the captures (just one capture per match)
+		node = match.Captures[0].Node
+		// get the current line of code (the one that'll be modified
+		str := slicedCode[node.StartPosition().Row]
+		// check if there's a value of this row in the cache
+		_, ok := diff[node.StartPosition().Row]
+		// if there's not, we inicialize it to 0
 		if !ok {
-			index[node.StartPosition().Row] = str[:node.StartPosition().Column] + string(newVarName) + str[node.EndPosition().Column:]
-			continue
+			diff[node.StartPosition().Row] = 0
 		}
-		index[node.StartPosition().Row] = s[:node.EndPosition().Column] + string(newVarName) + str[node.EndPosition().Column:]
-	}
-	fmt.Println("CODE:", index)
+		// get the value from the cache of that position (atp, there'll always be a value)
+		value := diff[node.StartPosition().Row]
 
-	// Write the new code into the file (just with the modified lines)
-	/*err := os.WriteFile("main.py", code, 0644)
+		// modify the line of code using the cache and slicing
+		slicedCode[node.StartPosition().Row] = str[:node.StartPosition().Column+value] + newVarName + str[node.EndPosition().Column+value:]
+
+		// update the value of the row, adding up the difference of lengths
+		diff[node.StartPosition().Row] += uint(len(newVarName) - len(currentVarName))
+	}
+
+	// Write the modified code into the file (with the new variable names where they belong)
+	err := os.WriteFile("main.py", []byte(strings.Join(slicedCode, "\n")), 0644)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error trying to write the variable name into the file...")
 		os.Exit(1)
-	}*/
+	}
 }
 
 // ---- Writing on files and renaming ----
@@ -117,8 +130,8 @@ func getTokens(upperIndexes []int16, line string) []string {
 }
 
 // refactorVarName: with the strings split in tokens, returns a []byte of the new line of code.
-func refactorVarName(tokens []string) []byte {
-	var selected int8 = 4
+func refactorVarName(tokens []string) string {
+	var selected int8 = 3
 	var newName string = tokens[0]
 
 	switch selected {
@@ -131,5 +144,5 @@ func refactorVarName(tokens []string) []byte {
 			newName += "_" + token
 		}
 	}
-	return []byte(newName)
+	return newName
 }
