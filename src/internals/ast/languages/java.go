@@ -1,8 +1,8 @@
-package grammar
+package languages
 
 import (
 	"CLI_App/src/config"
-	"CLI_App/src/internals/ast/languages"
+	language "CLI_App/src/internals/ast/utils"
 	"CLI_App/src/internals/utils"
 	"fmt"
 
@@ -11,10 +11,10 @@ import (
 )
 
 type java struct {
-	data languages.LanguageData
+	data language.LanguageData
 }
 
-func (j java) ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *languages.FunctionData) {
+func (j java) ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *language.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
@@ -40,8 +40,12 @@ func (j java) GetQueries() string {
 	return j.data.Queries
 }
 
+func (j java) GetVarAppearancesQuery(name string) string {
+	return name
+}
+
 var JavaLanguage = java{
-	languages.LanguageData{
+	language.LanguageData{
 		Language: tree.NewLanguage(javaGrammar.Language()),
 		Queries:
 		// Method definition

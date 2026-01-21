@@ -1,6 +1,8 @@
-package languages
+package utils
 
-import tree "github.com/tree-sitter/go-tree-sitter"
+import (
+	tree "github.com/tree-sitter/go-tree-sitter"
+)
 
 /*
  * language.go: Definition of all the types used in the parsing
@@ -17,6 +19,7 @@ type NodeManagement interface {
 	ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *FunctionData)
 	GetLanguage() *tree.Language
 	GetQueries() string
+	GetVarAppearancesQuery(name string) string
 }
 
 // FunctionData - > struct made to register all the data returned by the parser and save it

@@ -1,8 +1,9 @@
-package grammar
+package languages
 
 import (
 	"CLI_App/src/config"
-	"CLI_App/src/internals/ast/languages"
+	language "CLI_App/src/internals/ast/utils"
+	"CLI_App/src/internals/ast/writer"
 	"CLI_App/src/internals/utils"
 	"fmt"
 
@@ -12,18 +13,18 @@ import (
 
 // python: struct with LanguageInformation embedded
 type python struct {
-	data languages.LanguageData
+	data language.LanguageData
 }
 
 // ManageNode - > Function to implement the NodeManagement interface
-func (p python) ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *languages.FunctionData) {
+func (p python) ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *language.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
 		nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
 			string(code[node.Node.StartByte():node.Node.EndByte()]),
 			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 		)
-		//utils.ModifyVariableName(node.Node, code, "main.py")
+		writer.ModifyVariableName(p, node.Node, code, "main.py")
 		return
 	case node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment":
 		return
@@ -39,9 +40,13 @@ func (p python) GetQueries() string {
 	return p.data.Queries
 }
 
+func (p python) GetVarAppearancesQuery(name string) string {
+	return fmt.Sprintf("((identifier) @variable.name (#match? @variable.name \"^%s$\"))", name)
+}
+
 // PythonData initialize the needed data for the Python language usage
 var PythonData = python{
-	languages.LanguageData{
+	language.LanguageData{
 		Language: tree.NewLanguage(pyGrammar.Language()),
 		Queries:
 		// Function definition

@@ -2,7 +2,8 @@ package ast
 
 import (
 	"CLI_App/src/internals/ast/languages"
-	"CLI_App/src/internals/ast/languages/grammar"
+	"CLI_App/src/internals/ast/tree"
+	"CLI_App/src/internals/ast/utils"
 	"fmt"
 	"os"
 )
@@ -12,15 +13,15 @@ import (
  * config for their parsing and analysis. Also, contains methods to manage the Functions...
  */
 
-var languageQueries = map[string]languages.NodeManagement{
-	"js":   grammar.JsLanguage,
-	"jsx":  grammar.JsLanguage,
-	"py":   grammar.PythonData,
-	"java": grammar.JavaLanguage,
-	"go":   grammar.GoLanguage,
+var languageQueries = map[string]utils.NodeManagement{
+	"js":   languages.JsLanguage,
+	"jsx":  languages.JsLanguage,
+	"py":   languages.PythonData,
+	"java": languages.JavaLanguage,
+	"go":   languages.GoLanguage,
 }
 
-func RunParser(code []byte, language string) []*languages.FunctionData {
+func RunParser(code []byte, language string) []*utils.FunctionData {
 	languageInfo, ok := languageQueries[language]
 	if !ok {
 		fmt.Fprintln(os.Stderr, "Error with the language: not supported yet.")
@@ -28,16 +29,16 @@ func RunParser(code []byte, language string) []*languages.FunctionData {
 	}
 
 	// Find the cyclical complexity of the functions
-	functions := CyclicalComplexity(languageInfo, code)
+	functions := tree.CyclicalComplexity(languageInfo, code)
 
 	// Remove the 'normal' functions from the list, keeping the dangerous ones.
 	i := 0
 	for i < len(functions) {
 		function := functions[i]
 		// If the functions isn't dangerous, we delete it
-		if function.TotalParams <= languages.Messages["parameters"][0].Value &&
-			function.Complexity <= languages.Messages["complexity"][0].Value &&
-			int(function.Size) <= languages.Messages["size"][0].Value &&
+		if function.TotalParams <= utils.Messages["parameters"][0].Value &&
+			function.Complexity <= utils.Messages["complexity"][0].Value &&
+			int(function.Size) <= utils.Messages["size"][0].Value &&
 			function.Feedback == "" {
 			// If the function is dangerous, we increase the counter.
 			functions = append(functions[:i], functions[i+1:]...)

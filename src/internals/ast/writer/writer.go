@@ -1,22 +1,28 @@
-package utils
+package writer
 
 import (
+	parser "CLI_App/src/internals/ast/tree"
+	languages "CLI_App/src/internals/ast/utils"
+	"CLI_App/src/internals/utils"
 	"fmt"
-	"os"
 	"strings"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 )
 
+/*
+ * writer.go - > file to write some data on a file using some ast queries.
+ */
+
 // ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
 // Takes the node captured (the one we want to modify) and the path.
 // Only converts from one convention to another (safety conditions)
-func ModifyVariableName(node tree.Node, code []byte, filePath string) {
+func ModifyVariableName(management languages.NodeManagement, node tree.Node, code []byte, filePath string) {
 	// currentVarName is the current name of the variable on the code
 	currentVarName := string(code[node.StartByte():node.EndByte()])
 
 	// If the variable isn't  camelCase, CamelCase or snake_case, we don't modify it (for code safety)
-	if !RegexMatch(CamelCase+"|"+SnakeCase, currentVarName) {
+	if !utils.RegexMatch(utils.CamelCase+"|"+utils.SnakeCase, currentVarName) {
 		return
 	}
 
@@ -25,16 +31,42 @@ func ModifyVariableName(node tree.Node, code []byte, filePath string) {
 	// with the indexes, separate the line into valid tokens
 	tokens := getTokens(upperIndexes, currentVarName)
 	newVarName := refactorVarName(tokens)
+	fmt.Println(string(newVarName), currentVarName)
 
-	// modify just the line of code we need to.
-	code = append(append(code[:node.StartByte()], newVarName...), code[node.EndByte():]...)
+	root := parser.GetAST(code, management.GetLanguage())
+	defer root.Close()
+	query, cursor, captures := parser.GetCapturesByQueries(management.GetLanguage(),
+		management.GetVarAppearancesQuery(currentVarName), code, root.RootNode())
+	defer query.Close()
+	defer cursor.Close()
+
+	index := make(map[uint]string)
+	splitedCode := strings.Split(string(code), "\n")
+
+	for {
+		match := captures.Next()
+		if match == nil {
+			break
+		}
+		copyOf := *match
+		node = copyOf.Captures[0].Node
+		str := splitedCode[node.StartPosition().Row]
+
+		s, ok := index[node.StartPosition().Row]
+		if !ok {
+			index[node.StartPosition().Row] = str[:node.StartPosition().Column] + string(newVarName) + str[node.EndPosition().Column:]
+			continue
+		}
+		index[node.StartPosition().Row] = s[:node.EndPosition().Column] + string(newVarName) + str[node.EndPosition().Column:]
+	}
+	fmt.Println("CODE:", index)
 
 	// Write the new code into the file (just with the modified lines)
-	err := os.WriteFile("main.py", code, 0644)
+	/*err := os.WriteFile("main.py", code, 0644)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error trying to write the variable name into the file...")
 		os.Exit(1)
-	}
+	}*/
 }
 
 // ---- Writing on files and renaming ----
@@ -86,7 +118,7 @@ func getTokens(upperIndexes []int16, line string) []string {
 
 // refactorVarName: with the strings split in tokens, returns a []byte of the new line of code.
 func refactorVarName(tokens []string) []byte {
-	var selected int8 = 3
+	var selected int8 = 4
 	var newName string = tokens[0]
 
 	switch selected {

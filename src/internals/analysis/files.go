@@ -2,7 +2,7 @@ package analysis
 
 import (
 	"CLI_App/src/internals/ast"
-	"CLI_App/src/internals/ast/languages"
+	utils2 "CLI_App/src/internals/ast/utils"
 	"CLI_App/src/internals/utils"
 	"fmt"
 	"os"
@@ -18,7 +18,7 @@ var wg sync.WaitGroup
 var languagesMap = make(map[string]int)
 
 // DangerousFunctions map - > Map to save up the dangerous functions per script
-var DangerousFunctions = make(map[string][]*languages.FunctionData)
+var DangerousFunctions = make(map[string][]*utils2.FunctionData)
 
 // Files - > Entry point for the command line with the flags
 func Files(locFlag bool) {

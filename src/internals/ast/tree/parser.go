@@ -1,7 +1,7 @@
-package ast
+package tree
 
 import (
-	"CLI_App/src/internals/ast/languages"
+	"CLI_App/src/internals/ast/utils"
 	"fmt"
 	"os"
 
@@ -42,7 +42,7 @@ func GetCapturesByQueries(language *tree.Language, queries string, code []byte, 
 }
 
 // CyclicalComplexity Function that calculates the cyclical complexity of the code. Useful for the user feedback.
-func CyclicalComplexity(languageInfo languages.NodeManagement, code []byte) []*languages.FunctionData {
+func CyclicalComplexity(languageInfo utils.NodeManagement, code []byte) []*utils.FunctionData {
 	// Get our ast bases in our code and grammar
 	ast := GetAST(code, languageInfo.GetLanguage())
 	defer ast.Close()
@@ -51,11 +51,11 @@ func CyclicalComplexity(languageInfo languages.NodeManagement, code []byte) []*l
 	defer query.Close()
 	defer cursor.Close()
 	// List used as a stack to get the subfunctions and it's complexity right
-	var Stack []*languages.FunctionData
+	var Stack []*utils.FunctionData
 	// Slice to save up the functions we take out the stack (with their final complexity)
-	var Functions []*languages.FunctionData
+	var Functions []*utils.FunctionData
 	// Append a default main to the slice (JS, Python)
-	Functions = append(Functions, &languages.FunctionData{Name: "Default Main", Complexity: 1, TotalParams: 0})
+	Functions = append(Functions, &utils.FunctionData{Name: "Default Main", Complexity: 1, TotalParams: 0})
 
 	// Get the Functions data
 	for {
@@ -70,7 +70,7 @@ func CyclicalComplexity(languageInfo languages.NodeManagement, code []byte) []*l
 		switch {
 		// While we iterate through the captures, we save up the copies on a slice of objects.
 		case query.CaptureNames()[copyOf.Captures[0].Index] == "function":
-			Stack = append(Stack, &languages.FunctionData{Complexity: 1})
+			Stack = append(Stack, &utils.FunctionData{Complexity: 1})
 			// Add the initial data to the object reference in the stack
 			Stack[len(Stack)-1].AddInitialData(
 				string(code[copyOf.Captures[1].Node.StartByte():copyOf.Captures[1].Node.EndByte()]),

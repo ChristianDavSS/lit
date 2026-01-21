@@ -1,8 +1,8 @@
-package grammar
+package languages
 
 import (
 	"CLI_App/src/config"
-	"CLI_App/src/internals/ast/languages"
+	language "CLI_App/src/internals/ast/utils"
 	"CLI_App/src/internals/utils"
 	"fmt"
 
@@ -12,10 +12,10 @@ import (
 
 // javascript interface with LanguageData embedded
 type javascript struct {
-	data languages.LanguageData
+	data language.LanguageData
 }
 
-func (js javascript) ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *languages.FunctionData) {
+func (js javascript) ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *language.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
 		nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
@@ -37,8 +37,12 @@ func (js javascript) GetQueries() string {
 	return js.data.Queries
 }
 
+func (js javascript) GetVarAppearancesQuery(name string) string {
+	return name
+}
+
 var JsLanguage = javascript{
-	languages.LanguageData{
+	language.LanguageData{
 		Language: tree.NewLanguage(jsGrammar.Language()),
 		Queries:
 		// Normal Function
