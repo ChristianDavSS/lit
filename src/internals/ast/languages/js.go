@@ -1,8 +1,9 @@
 package languages
 
 import (
-	"CLI_App/src/config"
+	"CLI_App/src/internals/ast/config"
 	language "CLI_App/src/internals/ast/utils"
+	"CLI_App/src/internals/ast/writer"
 	"CLI_App/src/internals/utils"
 	"fmt"
 
@@ -15,13 +16,14 @@ type javascript struct {
 	data language.LanguageData
 }
 
-func (js javascript) ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *language.FunctionData) {
+func (js javascript) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *language.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
 		nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
 			string(code[node.Node.StartByte():node.Node.EndByte()]),
 			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 		)
+		writer.ModifyVariableName(js, node.Node, code, filepath)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
@@ -59,9 +61,9 @@ var JsLanguage = javascript{
 			"body: (_) @function.body ) @function" +
 			// Variable names
 			"(variable_declarator name: ([(identifier) @variable.name (array_pattern (identifier) @variable.name)])" +
-			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
+			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActivePattern + "\"))" +
 			"(for_in_statement left: ([(identifier) @variable.name (array_pattern (identifier) @variable.name)])" +
-			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
+			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActivePattern + "\"))" +
 			// Functions body information (keywords)
 			"[" +
 			// if, else-if, else

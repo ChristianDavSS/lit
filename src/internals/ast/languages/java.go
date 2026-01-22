@@ -1,8 +1,9 @@
 package languages
 
 import (
-	"CLI_App/src/config"
+	"CLI_App/src/internals/ast/config"
 	language "CLI_App/src/internals/ast/utils"
+	"CLI_App/src/internals/ast/writer"
 	"CLI_App/src/internals/utils"
 	"fmt"
 
@@ -14,7 +15,7 @@ type java struct {
 	data language.LanguageData
 }
 
-func (j java) ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *language.FunctionData) {
+func (j java) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *language.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
@@ -23,6 +24,7 @@ func (j java) ManageNode(captureNames []string, code []byte, node tree.QueryCapt
 			string(code[node.Node.StartByte():node.Node.EndByte()]),
 			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 		)
+		writer.ModifyVariableName(j, node.Node, code, filepath)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
@@ -54,9 +56,9 @@ var JavaLanguage = java{
 			"body: (block) @function.body ) @function " +
 			// Variable names
 			"(variable_declarator name: (identifier) @variable.name " +
-			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
+			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActivePattern + "\"))" +
 			"(enhanced_for_statement name: (identifier) @variable.name " +
-			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
+			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActivePattern + "\"))" +
 			// Keywords (+1 complexity)
 			"[" +
 			// Loops

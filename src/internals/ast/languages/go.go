@@ -1,8 +1,9 @@
 package languages
 
 import (
-	"CLI_App/src/config"
+	"CLI_App/src/internals/ast/config"
 	language "CLI_App/src/internals/ast/utils"
+	"CLI_App/src/internals/ast/writer"
 	"CLI_App/src/internals/utils"
 	"fmt"
 
@@ -14,7 +15,7 @@ type golang struct {
 	data language.LanguageData
 }
 
-func (g golang) ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *language.FunctionData) {
+func (g golang) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *language.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
@@ -23,6 +24,7 @@ func (g golang) ManageNode(captureNames []string, code []byte, node tree.QueryCa
 			string(code[node.Node.StartByte():node.Node.EndByte()]),
 			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 		)
+		writer.ModifyVariableName(g, node.Node, code, filepath)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "expression_list":
 		return
@@ -54,9 +56,9 @@ var GoLanguage = golang{
 			"body: (_) @function.body ) @function " +
 			// Variable names
 			"(expression_list (identifier) @variable.name" +
-			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
+			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActivePattern + "\"))" +
 			"(var_declaration (var_spec name: (identifier) @variable.name)" +
-			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
+			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActivePattern + "\"))" +
 			// Keywords
 			"[" +
 			"(if_statement) (for_statement) (expression_case)" +

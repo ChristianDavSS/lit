@@ -6,6 +6,7 @@ import (
 	"CLI_App/src/internals/ast/utils"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 /*
@@ -21,15 +22,15 @@ var languageQueries = map[string]utils.NodeManagement{
 	"go":   languages.GoLanguage,
 }
 
-func RunParser(code []byte, language string) []*utils.FunctionData {
-	languageInfo, ok := languageQueries[language]
+func RunParser(code []byte, filename string) []*utils.FunctionData {
+	languageInfo, ok := languageQueries[filepath.Ext(filename)[1:]]
 	if !ok {
 		fmt.Fprintln(os.Stderr, "Error with the language: not supported yet.")
 		os.Exit(1)
 	}
 
 	// Find the cyclical complexity of the functions
-	functions := tree.CyclicalComplexity(languageInfo, code)
+	functions := tree.CyclicalComplexity(languageInfo, code, filename)
 
 	// Remove the 'normal' functions from the list, keeping the dangerous ones.
 	i := 0

@@ -16,7 +16,7 @@ type LanguageData struct {
 
 // NodeManagement defines the functions every language struct uses
 type NodeManagement interface {
-	ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *FunctionData)
+	ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *FunctionData)
 	GetLanguage() *tree.Language
 	GetQueries() string
 	GetVarAppearancesQuery(name string) string

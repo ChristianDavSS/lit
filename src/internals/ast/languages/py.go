@@ -1,7 +1,7 @@
 package languages
 
 import (
-	"CLI_App/src/config"
+	"CLI_App/src/internals/ast/config"
 	language "CLI_App/src/internals/ast/utils"
 	"CLI_App/src/internals/ast/writer"
 	"CLI_App/src/internals/utils"
@@ -17,14 +17,14 @@ type python struct {
 }
 
 // ManageNode - > Function to implement the NodeManagement interface
-func (p python) ManageNode(captureNames []string, code []byte, node tree.QueryCapture, nodeInfo *language.FunctionData) {
+func (p python) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *language.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
 		nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
 			string(code[node.Node.StartByte():node.Node.EndByte()]),
 			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 		)
-		writer.ModifyVariableName(p, node.Node, code, "main.py")
+		writer.ModifyVariableName(p, node.Node, code, filepath)
 		return
 	case node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment":
 		return
@@ -55,9 +55,9 @@ var PythonData = python{
 			"body: (block) @function.body) @function " +
 			// Variable names
 			"(assignment left: ([(identifier) @variable.name (pattern_list (identifier) @variable.name)])" +
-			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
+			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActivePattern + "\"))" +
 			"(for_statement left: ([(identifier) @variable.name (pattern_list (identifier) @variable.name)])" +
-			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.GetActiveNamingConvention() + "\"))" +
+			"(#not-match? @variable.name \"" + utils.AllowNonNamedVar + "|" + config.ActivePattern + "\"))" +
 			// Keywords
 			"[" +
 			// If, else-if, else

@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"CLI_App/src/internals/ast/config"
 	parser "CLI_App/src/internals/ast/tree"
 	languages "CLI_App/src/internals/ast/utils"
 	"CLI_App/src/internals/utils"
@@ -19,6 +20,11 @@ import (
 // Takes the node captured (the one we want to modify) and the path.
 // Only converts from one convention to another (safety conditions)
 func ModifyVariableName(management languages.NodeManagement, node tree.Node, code []byte, filePath string) {
+	// if the flag is false, we don't fix
+	if !config.ShouldFix {
+		return
+	}
+
 	// currentVarName is the current name of the variable on the code
 	currentVarName := string(code[node.StartByte():node.EndByte()])
 
@@ -64,7 +70,7 @@ func ModifyVariableName(management languages.NodeManagement, node tree.Node, cod
 		if !ok {
 			diff[node.StartPosition().Row] = 0
 		}
-		// get the value from the cache of that position (atp, there'll always be a value)
+		// get the value from the cache of that position (at this point, there key will always have a value)
 		value := diff[node.StartPosition().Row]
 
 		// modify the line of code using the cache and slicing
@@ -75,7 +81,7 @@ func ModifyVariableName(management languages.NodeManagement, node tree.Node, cod
 	}
 
 	// Write the modified code into the file (with the new variable names where they belong)
-	err := os.WriteFile("main.py", []byte(strings.Join(slicedCode, "\n")), 0644)
+	err := os.WriteFile(filePath, []byte(strings.Join(slicedCode, "\n")), 0644)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Error trying to write the variable name into the file...")
 		os.Exit(1)
@@ -131,18 +137,25 @@ func getTokens(upperIndexes []int16, line string) []string {
 
 // refactorVarName: with the strings split in tokens, returns a []byte of the new line of code.
 func refactorVarName(tokens []string) string {
-	var selected int8 = 3
-	var newName string = tokens[0]
+	var newName = tokens[0]
 
-	switch selected {
-	case 3:
-		for _, token := range tokens[1:] {
-			newName += string(token[0]-32) + token[1:]
-		}
+	switch config.ActiveConventionIndex {
+	case 2:
+		newName = ""
+		camelCases(&newName, tokens)
+	case 1, 3:
+		camelCases(&newName, tokens[1:])
 	case 4:
 		for _, token := range tokens[1:] {
 			newName += "_" + token
 		}
 	}
 	return newName
+}
+
+// function with the logics for the camelCase and CamelCase convertions
+func camelCases(target *string, tokens []string) {
+	for _, token := range tokens {
+		*target += string(token[0]-32) + token[1:]
+	}
 }

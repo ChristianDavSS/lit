@@ -9,14 +9,17 @@ import (
 
 func Files() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "files",
+		Use:   "scan",
 		Short: "Scan the repository files (must include a .gitignore) and retrieves data from them",
 		Run: func(cmd *cobra.Command, args []string) {
 			loc, _ := cmd.Flags().GetBool("loc")
-			internal.Files(loc)
+			fix, _ := cmd.Flags().GetBool("fix")
+			internal.Files(loc, fix)
 		},
 	}
 	command.Flags().Bool("loc", false, "Retrieves the languages used with statistics")
+	command.Flags().Bool("fix", false, "Fixes up the variables with an invalid naming conventions."+
+		"It only one convention to another\nExample: if you have variables snake_case and the active convention is camelCase, it's converted.")
 
 	return command
 }

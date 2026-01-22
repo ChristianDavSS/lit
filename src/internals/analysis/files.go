@@ -2,7 +2,8 @@ package analysis
 
 import (
 	"CLI_App/src/internals/ast"
-	utils2 "CLI_App/src/internals/ast/utils"
+	astMiddleware "CLI_App/src/internals/ast/config"
+	types "CLI_App/src/internals/ast/utils"
 	"CLI_App/src/internals/utils"
 	"fmt"
 	"os"
@@ -18,15 +19,17 @@ var wg sync.WaitGroup
 var languagesMap = make(map[string]int)
 
 // DangerousFunctions map - > Map to save up the dangerous functions per script
-var DangerousFunctions = make(map[string][]*utils2.FunctionData)
+var DangerousFunctions = make(map[string][]*types.FunctionData)
 
 // Files - > Entry point for the command line with the flags
-func Files(locFlag bool) {
+func Files(locFlag, fixFlag bool) {
 	files := utils.GetDirEntries(utils.GetWorkingDirectory())
 	if locFlag {
 		loc(files)
 		return
 	}
+	// Set up the fix flag into the ast config flag.
+	astMiddleware.ShouldFix = fixFlag
 	traverseFiles(files, fileScanner, utils.ScanValidScriptPattern)
 	printDangerousFunctions()
 }
@@ -82,8 +85,8 @@ func addToLanguagesMap(filename string, code []byte) {
 // fileScanner get the full name of the file and the code, calling the parser on the code
 func fileScanner(filename string, code []byte) {
 	defer wg.Done()
-	language := strings.Split(filename, ".")
-	functions := ast.RunParser(code, language[len(language)-1])
+
+	functions := ast.RunParser(code, filename)
 	// If there's any function returned, we save it up
 	if len(functions) > 0 {
 		DangerousFunctions[filename] = append(DangerousFunctions[filename], functions...)
