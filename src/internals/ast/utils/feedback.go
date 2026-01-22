@@ -1,4 +1,4 @@
-package languages
+package utils
 
 type Feedback struct {
 	Value   int

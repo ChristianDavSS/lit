@@ -1,24 +1,25 @@
 package config
 
 import (
-	patterns "CLI_App/src/internals/analysis/utils"
+	patterns "CLI_App/src/internals/utils"
 	"fmt"
 	"runtime"
 
 	"github.com/fatih/color"
 )
 
+// Variable to save up the key-value pairs with the index-regex for the naming conventions.
+var conventions = map[int8]string{
+	1: patterns.LowerCamelCase,
+	2: patterns.UpperCamelCase,
+	3: patterns.CamelCase,
+	4: patterns.SnakeCase,
+}
+
 // getNamingConvention - > Asks the user to select their favorite naming convention for the variables.
-func getNamingConvention() string {
+func getNamingConvention() int8 {
 	// Variable to save the value the user selects.
 	var selectedConvention int8
-	// Variable to save up the key-value pairs with the index-regex for the naming conventions.
-	conventions := map[int8]string{
-		1: patterns.LowerCamelCase,
-		2: patterns.UpperCamelCase,
-		3: patterns.CamelCase,
-		4: patterns.SnakeCase,
-	}
 
 	// Ask the user for a valid input n times
 	for selectedConvention > 4 || selectedConvention < 1 {
@@ -32,5 +33,5 @@ func getNamingConvention() string {
 	}
 
 	// Return the pattern to use
-	return conventions[selectedConvention]
+	return selectedConvention
 }

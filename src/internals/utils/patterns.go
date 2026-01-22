@@ -1,5 +1,7 @@
 package utils
 
+import "regexp"
+
 // patterns.go - > File that contains every regex pattern used in the script
 
 // ScanValidScriptPattern for the regex that validates scripts for the scanner.
@@ -35,3 +37,8 @@ var SnakeCase = "^[a-z][a-z0-9]*([_]{1}[a-z0-9]+)*$" + "|" + Constant
 // Required in languages like Go or Python.
 // Example: pattern := AllowNonNamedVar + CamelCase
 var AllowNonNamedVar = "^[_]{1}$"
+
+func RegexMatch(pattern, target string) bool {
+	matched, _ := regexp.MatchString(pattern, target)
+	return matched
+}

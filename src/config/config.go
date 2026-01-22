@@ -10,7 +10,7 @@ import (
 
 // Config struct used to code/decode the JSON file.
 type Config struct {
-	NamingConvention string `json:"activeNamingConvention"`
+	NamingConventionIndex int8 `json:"activeNamingConventionIndex"`
 }
 
 var ActiveConfig *Config
@@ -25,7 +25,7 @@ var osClear = map[string][]string{
 // Init - > Entry point: Configure all the rules
 func Init() {
 	newConfig := Config{
-		NamingConvention: getNamingConvention(),
+		NamingConventionIndex: getNamingConvention(),
 	}
 	SetNewConfig(newConfig)
 	fmt.Println("Configuration updated.")
@@ -86,11 +86,11 @@ func ReadConfigJSON() []byte {
 }
 
 // GetActiveNamingConvention function: gets the active naming convention from the current configuration file
-func GetActiveNamingConvention() string {
+func GetActiveNamingConvention() (string, int8) {
 	// If the 'ActiveConfig' variable is nil, we set a value to it
 	if ActiveConfig == nil {
 		LoadDefaultConfig()
 	}
 
-	return ActiveConfig.NamingConvention
+	return conventions[ActiveConfig.NamingConventionIndex], ActiveConfig.NamingConventionIndex
 }

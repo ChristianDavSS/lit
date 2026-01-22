@@ -1,10 +1,10 @@
 package analysis
 
 import (
-	"CLI_App/src/internals"
-	"CLI_App/src/internals/analysis/utils"
 	"CLI_App/src/internals/ast"
-	"CLI_App/src/internals/ast/languages"
+	astMiddleware "CLI_App/src/internals/ast/config"
+	types "CLI_App/src/internals/ast/utils"
+	"CLI_App/src/internals/utils"
 	"fmt"
 	"os"
 	"regexp"
@@ -19,19 +19,17 @@ var wg sync.WaitGroup
 var languagesMap = make(map[string]int)
 
 // DangerousFunctions map - > Map to save up the dangerous functions per script
-var DangerousFunctions = make(map[string][]*languages.FunctionData)
+var DangerousFunctions = make(map[string][]*types.FunctionData)
 
 // Files - > Entry point for the command line with the flags
-func Files(locFlag bool) {
-	files, err := os.ReadDir(internals.GetWorkingDirectory())
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error reading the file structure: ", err)
-		os.Exit(1)
-	}
+func Files(locFlag, fixFlag bool) {
+	files := utils.GetDirEntries(utils.GetWorkingDirectory())
 	if locFlag {
 		loc(files)
 		return
 	}
+	// Set up the fix flag into the ast config flag.
+	astMiddleware.ShouldFix = fixFlag
 	traverseFiles(files, fileScanner, utils.ScanValidScriptPattern)
 	printDangerousFunctions()
 }
@@ -87,8 +85,8 @@ func addToLanguagesMap(filename string, code []byte) {
 // fileScanner get the full name of the file and the code, calling the parser on the code
 func fileScanner(filename string, code []byte) {
 	defer wg.Done()
-	language := strings.Split(filename, ".")
-	functions := ast.RunParser(code, language[len(language)-1])
+
+	functions := ast.RunParser(code, filename)
 	// If there's any function returned, we save it up
 	if len(functions) > 0 {
 		DangerousFunctions[filename] = append(DangerousFunctions[filename], functions...)
@@ -97,7 +95,7 @@ func fileScanner(filename string, code []byte) {
 
 // Navigate through the file system with a DFS algorithm.
 func traverseFiles(initialFiles []os.DirEntry, fileFunction func(filename string, code []byte), validScriptPattern string) {
-	stack := []utils.Directory{{"", initialFiles}}
+	stack := []Directory{{"", initialFiles}}
 	for len(stack) > 0 {
 		// Extract the last element from the stack
 		files := stack[len(stack)-1]
@@ -111,22 +109,14 @@ func traverseFiles(initialFiles []os.DirEntry, fileFunction func(filename string
 					continue
 				}
 				fmt.Println("Reading", files.DirName+v.Name()+"/")
-				dir, err := os.ReadDir(files.DirName + v.Name() + "/")
-				if err != nil {
-					fmt.Fprintln(os.Stderr, "Error reading the directory...")
-					os.Exit(1)
-				}
-				stack = append(stack, utils.Directory{DirName: files.DirName + v.Name() + "/", Content: dir})
+				dir := utils.GetDirEntries(files.DirName + v.Name() + "/")
+				stack = append(stack, Directory{DirName: files.DirName + v.Name() + "/", Content: dir})
 			} else {
 				// Check if the current file is a programming language script
 				if r, _ := regexp.Match(validScriptPattern, []byte(v.Name())); !r {
 					continue
 				}
-				file, err := os.ReadFile(files.DirName + v.Name())
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Error reading the file %s. Please report the issue.\n", files.DirName+v.Name())
-					os.Exit(1)
-				}
+				file := utils.ReadFile(files.DirName + v.Name())
 				wg.Add(1)
 				go fileFunction(files.DirName+v.Name(), file)
 			}
