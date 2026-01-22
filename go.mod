@@ -10,7 +10,6 @@ require (
 	github.com/tree-sitter/tree-sitter-java v0.23.5
 	github.com/tree-sitter/tree-sitter-javascript v0.25.0
 	github.com/tree-sitter/tree-sitter-python v0.25.0
-	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 )
 
 require (
