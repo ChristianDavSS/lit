@@ -1,4 +1,4 @@
-package utils
+package domain
 
 import "regexp"
 
@@ -37,6 +37,13 @@ var SnakeCase = "^[a-z][a-z0-9]*([_]{1}[a-z0-9]+)*$" + "|" + Constant
 // Required in languages like Go or Python.
 // Example: pattern := AllowNonNamedVar + CamelCase
 var AllowNonNamedVar = "^[_]{1}$"
+
+var Conventions = map[int8]string{
+	1: LowerCamelCase,
+	2: UpperCamelCase,
+	3: CamelCase,
+	4: SnakeCase,
+}
 
 func RegexMatch(pattern, target string) bool {
 	matched, _ := regexp.MatchString(pattern, target)

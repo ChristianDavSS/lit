@@ -1,10 +1,9 @@
-package writer
+package analysis
 
 import (
-	"CLI_App/src/internals/ast/config"
-	parser "CLI_App/src/internals/ast/tree"
-	languages "CLI_App/src/internals/ast/utils"
-	"CLI_App/src/internals/utils"
+	"CLI_App/cmd/adapters/analysis/types"
+	"CLI_App/cmd/adapters/config"
+	"CLI_App/cmd/domain"
 	"fmt"
 	"os"
 	"strings"
@@ -16,20 +15,26 @@ import (
  * writer.go - > file to write some data on a file using some ast queries.
  */
 
+// FileModifier is -
+type FileModifier struct {
+	management types.NodeManagement
+}
+
+func NewFileModifier(management types.NodeManagement) FileModifier {
+	return FileModifier{
+		management: management,
+	}
+}
+
 // ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
 // Takes the node captured (the one we want to modify) and the path.
 // Only converts from one convention to another (safety conditions)
-func ModifyVariableName(management languages.NodeManagement, node tree.Node, code []byte, filePath string) {
-	// if the flag is false, we don't fix
-	if !config.ShouldFix {
-		return
-	}
-
+func (f FileModifier) ModifyVariableName(node tree.Node, code []byte, filePath string, varName string) {
 	// currentVarName is the current name of the variable on the code
 	currentVarName := string(code[node.StartByte():node.EndByte()])
 
 	// If the variable isn't  camelCase, CamelCase or snake_case, we don't modify it (for code safety)
-	if !utils.RegexMatch(utils.CamelCase+"|"+utils.SnakeCase, currentVarName) {
+	if !domain.RegexMatch(domain.CamelCase+"|"+domain.SnakeCase, currentVarName) {
 		return
 	}
 
@@ -41,10 +46,10 @@ func ModifyVariableName(management languages.NodeManagement, node tree.Node, cod
 	newVarName := refactorVarName(tokens)
 
 	// get the query, cursor and captures (applying the query to fetch them)
-	root := parser.GetAST(code, management.GetLanguage())
+	root := GetAST(code, f.management.GetLanguageData().Language)
 	defer root.Close()
-	query, cursor, captures := parser.GetCapturesByQueries(management.GetLanguage(),
-		management.GetVarAppearancesQuery(currentVarName), code, root.RootNode())
+	query, cursor, captures := GetCapturesByQueries(f.management.GetLanguageData().Language,
+		f.management.GetVarAppearancesQuery(varName), code, root.RootNode())
 	defer query.Close()
 	defer cursor.Close()
 
@@ -66,7 +71,7 @@ func ModifyVariableName(management languages.NodeManagement, node tree.Node, cod
 		str := slicedCode[node.StartPosition().Row]
 		// check if there's a value of this row in the cache
 		_, ok := diff[node.StartPosition().Row]
-		// if there's not, we inicialize it to 0
+		// if there's not, we initialize it to 0
 		if !ok {
 			diff[node.StartPosition().Row] = 0
 		}
@@ -139,7 +144,8 @@ func getTokens(upperIndexes []int16, line string) []string {
 func refactorVarName(tokens []string) string {
 	var newName = tokens[0]
 
-	switch config.ActiveConventionIndex {
+	jsonAdapter := config.NewJSONAdapter()
+	switch jsonAdapter.GetConfig().NamingConventionIndex {
 	case 2:
 		newName = ""
 		camelCases(&newName, tokens)
@@ -153,7 +159,7 @@ func refactorVarName(tokens []string) string {
 	return newName
 }
 
-// function with the logics for the camelCase and CamelCase convertions
+// function with the logics for the camelCase and CamelCase conversions
 func camelCases(target *string, tokens []string) {
 	for _, token := range tokens {
 		*target += string(token[0]-32) + token[1:]

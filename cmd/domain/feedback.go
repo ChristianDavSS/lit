@@ -1,5 +1,6 @@
-package utils
+package domain
 
+// Feedback is used to send messages to the user when a something is >= value
 type Feedback struct {
 	Value   int
 	Message string

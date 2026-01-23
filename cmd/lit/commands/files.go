@@ -1,8 +1,10 @@
 package commands
 
 import (
-	"CLI_App/src/config"
-	internal "CLI_App/src/internals/analysis"
+	"CLI_App/cmd/adapters/analysis/languages"
+	"CLI_App/cmd/adapters/config"
+	"CLI_App/cmd/domain"
+	"CLI_App/cmd/service"
 
 	"github.com/spf13/cobra"
 )
@@ -14,7 +16,20 @@ func Files() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			loc, _ := cmd.Flags().GetBool("loc")
 			fix, _ := cmd.Flags().GetBool("fix")
-			internal.Files(loc, fix)
+
+			jsonAdapter := config.NewJSONAdapter()
+			scanner := service.NewScannerService(
+				languages.NewFileAnalyzer(fix, domain.Conventions[jsonAdapter.GetConfig().NamingConventionIndex]),
+			)
+
+			if loc {
+				scanner.ExecuteLOC()
+				scanner.PrintLOCResults()
+				return
+			}
+
+			scanner.ScanFiles()
+			scanner.PrintScanningResults()
 		},
 	}
 	command.Flags().Bool("loc", false, "Retrieves the languages used with statistics")
@@ -22,14 +37,4 @@ func Files() *cobra.Command {
 		"It only one convention to another\nExample: if you have variables snake_case and the active convention is camelCase, it's converted.")
 
 	return command
-}
-
-func Configuration() *cobra.Command {
-	return &cobra.Command{
-		Use:   "config",
-		Short: "Configurate the scan variables.",
-		Run: func(cmd *cobra.Command, args []string) {
-			config.Init()
-		},
-	}
 }

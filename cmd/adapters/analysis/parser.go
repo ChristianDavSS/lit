@@ -1,7 +1,7 @@
-package tree
+package analysis
 
 import (
-	"CLI_App/src/internals/ast/utils"
+	"CLI_App/cmd/domain"
 	"fmt"
 	"os"
 
@@ -42,20 +42,20 @@ func GetCapturesByQueries(language *tree.Language, queries string, code []byte, 
 }
 
 // CyclicalComplexity Function that calculates the cyclical complexity of the code. Useful for the user feedback.
-func CyclicalComplexity(languageInfo utils.NodeManagement, code []byte, filepath string) []*utils.FunctionData {
+func CyclicalComplexity(languageInfo domain.NodeManagement, code []byte, filepath string) []*domain.FunctionData {
 	// Get our ast bases in our code and grammar
-	ast := GetAST(code, languageInfo.GetLanguage())
+	ast := GetAST(code, languageInfo.GetLanguageData().Language)
 	defer ast.Close()
 	// Get the basics to iterate through the captures and keep the data
-	query, cursor, captures := GetCapturesByQueries(languageInfo.GetLanguage(), languageInfo.GetQueries(), code, ast.RootNode())
+	query, cursor, captures := GetCapturesByQueries(languageInfo.GetLanguageData().Language, languageInfo.GetLanguageData().Queries, code, ast.RootNode())
 	defer query.Close()
 	defer cursor.Close()
 	// List used as a stack to get the subfunctions and it's complexity right
-	var Stack []*utils.FunctionData
+	var Stack []*domain.FunctionData
 	// Slice to save up the functions we take out the stack (with their final complexity)
-	var Functions []*utils.FunctionData
+	var Functions []*domain.FunctionData
 	// Append a default main to the slice (JS, Python)
-	Functions = append(Functions, &utils.FunctionData{Name: "Default Main", Complexity: 1, TotalParams: 0})
+	Functions = append(Functions, &domain.FunctionData{Name: "Default Main", Complexity: 1, TotalParams: 0})
 
 	// Get the Functions data
 	for {
@@ -70,14 +70,14 @@ func CyclicalComplexity(languageInfo utils.NodeManagement, code []byte, filepath
 		switch {
 		// While we iterate through the captures, we save up the copies on a slice of objects.
 		case query.CaptureNames()[copyOf.Captures[0].Index] == "function":
-			Stack = append(Stack, &utils.FunctionData{Complexity: 1})
+			Stack = append(Stack, &domain.FunctionData{Complexity: 1})
 			// Add the initial data to the object reference in the stack
 			Stack[len(Stack)-1].AddInitialData(
 				string(code[copyOf.Captures[1].Node.StartByte():copyOf.Captures[1].Node.EndByte()]),
 				int(copyOf.Captures[2].Node.NamedChildCount()),
 				copyOf.Captures[3].Node.StartByte(), copyOf.Captures[3].Node.EndByte(),
 				copyOf.Captures[3].Node.EndPosition().Row-copyOf.Captures[2].Node.StartPosition().Row,
-				copyOf.Captures[2].Node.StartPosition(),
+				domain.Point(copyOf.Captures[2].Node.StartPosition()),
 			)
 
 		// If there´s code without a function (JS, Python) before a function definition, we count it as main.
@@ -112,8 +112,7 @@ func CyclicalComplexity(languageInfo utils.NodeManagement, code []byte, filepath
 			}
 		}
 	}
-	// Restart the complexity of the main function of the script.
-	Functions[0].Complexity = 1
+
 	// If there's any function still on the stack, we copy it into the Functions slice.
 	return append(Functions, Stack...)
 }

@@ -1,9 +1,9 @@
 package main
 
 import (
-	root "CLI_App/src/cmd"
+	cmd "CLI_App/cmd/lit/commands"
 )
 
 func main() {
-	root.Execute()
+	cmd.Execute()
 }
