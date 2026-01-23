@@ -1,10 +1,8 @@
-package cmd
+package commands
 
 import (
 	"fmt"
 	"os"
-
-	"CLI_App/src/commands"
 
 	"github.com/spf13/cobra"
 )
@@ -14,14 +12,14 @@ var root = &cobra.Command{
 	Use:     "lit",
 	Short:   "Lit CLI tool for your git projects",
 	Long:    "Lit CLI is a tool made for with love for developers.\nScan your repository and get feedback now.",
-	Version: "0.01 beta",
+	Version: "1.0 release",
 }
 
 // Execute function to execute some code
 func Execute() {
 	// Add commands to the root
-	root.AddCommand(commands.Files())
-	root.AddCommand(commands.Configuration())
+	root.AddCommand(Files())
+	root.AddCommand(Configuration())
 
 	// Execute the root, registering all the children commands
 	if err := root.Execute(); err != nil {
