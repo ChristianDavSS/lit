@@ -4,6 +4,7 @@ import (
 	"CLI_App/cmd/domain"
 	_ "CLI_App/cmd/domain"
 	encoder "encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -12,7 +13,7 @@ import (
  * json.go - > manages the json files.
  */
 
-// ConfigDto gets the value of the current index on the config file (JSON, etc).
+// ConfigDto gets the value of the current index on the config file (JSON, etc.).
 type ConfigDto struct {
 	NamingConventionIndex int8 `json:"activeNamingConventionIndex"`
 }
@@ -31,12 +32,13 @@ func (json *JsonAdapter) GetConfig() *domain.Config {
 	if err != nil {
 		os.Exit(1)
 	}
+	fmt.Println("DTO:", dto)
 	return &domain.Config{
 		NamingConventionIndex: dto.NamingConventionIndex,
 	}
 }
 
-func (json *JsonAdapter) SaveConfig(cfg *domain.Config) {
+func (json *JsonAdapter) SaveConfig(cfg *ConfigDto) {
 	data, err := encoder.Marshal(&cfg)
 	if err != nil {
 		os.Exit(1)
@@ -67,5 +69,6 @@ func (json *JsonAdapter) readJsonData() []byte {
 		os.Exit(1)
 	}
 
+	fmt.Println(string(file))
 	return file
 }

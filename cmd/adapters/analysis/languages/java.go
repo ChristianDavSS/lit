@@ -34,7 +34,7 @@ func (j java) ManageNode(captureNames []string, code []byte, filepath string, no
 			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 		)
 		if j.shouldFix {
-			writer := analysis.NewFileModifier(j, "")
+			writer := analysis.NewFileModifier(j, string(code[node.Node.StartByte():node.Node.EndByte()]))
 			writer.ModifyVariableName(node.Node, code, filepath)
 		}
 		return

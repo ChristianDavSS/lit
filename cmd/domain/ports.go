@@ -6,5 +6,4 @@ type Analyzer interface {
 
 type ConfigAdapter interface {
 	GetConfig() *Config
-	SaveConfig(cfg *Config)
 }

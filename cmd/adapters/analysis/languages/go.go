@@ -34,7 +34,7 @@ func (g golang) ManageNode(captureNames []string, code []byte, filepath string, 
 			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 		)
 		if g.shouldFix {
-			writer := analysis.NewFileModifier(g, "")
+			writer := analysis.NewFileModifier(g, string(code[node.Node.StartByte():node.Node.EndByte()]))
 			writer.ModifyVariableName(node.Node, code, filepath)
 		}
 		return

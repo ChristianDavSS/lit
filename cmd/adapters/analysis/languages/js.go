@@ -33,7 +33,7 @@ func (js javascript) ManageNode(captureNames []string, code []byte, filepath str
 			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 		)
 		if js.shouldFix {
-			writer := analysis.NewFileModifier(js, "")
+			writer := analysis.NewFileModifier(js, string(code[node.Node.StartByte():node.Node.EndByte()]))
 			writer.ModifyVariableName(node.Node, code, filepath)
 		}
 		return

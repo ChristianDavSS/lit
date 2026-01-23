@@ -34,7 +34,7 @@ func (p python) ManageNode(captureNames []string, code []byte, filepath string, 
 			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
 		)
 		if p.shouldFix {
-			writer := analysis.NewFileModifier(p, "")
+			writer := analysis.NewFileModifier(p, string(code[node.Node.StartByte():node.Node.EndByte()]))
 			writer.ModifyVariableName(node.Node, code, filepath)
 		}
 		return
@@ -45,6 +45,7 @@ func (p python) ManageNode(captureNames []string, code []byte, filepath string, 
 }
 
 func buildPythonQuery(pattern string) string {
+	fmt.Println("PATTERN:", pattern)
 	return "(function_definition name: (identifier) @function.name " +
 		"parameters: (parameters) @function.parameters " +
 		"body: (block) @function.body) @function " +
