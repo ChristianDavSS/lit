@@ -4,25 +4,27 @@ import (
 	"CLI_App/cmd/adapters/analysis"
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
-	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	goGrammar "github.com/tree-sitter/tree-sitter-go/bindings/go"
 )
 
 type golang struct {
-	shouldFix bool
-	data      types.LanguageData
+	shouldFix    bool
+	fileModifier analysis.FileModifier
+	data         types.LanguageData
 }
 
 func NewGolangLanguage(pattern string, shouldFix bool) types.NodeManagement {
-	return &golang{
+	g := &golang{
 		shouldFix: shouldFix,
 		data: types.LanguageData{
 			Language: tree.NewLanguage(goGrammar.Language()),
 			Queries:  buildGolangQuery(pattern),
 		},
 	}
+	g.fileModifier = analysis.NewFileModifier(g)
+	return g
 }
 
 func (g golang) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
@@ -30,13 +32,12 @@ func (g golang) ManageNode(captureNames []string, code []byte, filepath string, 
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
+		nodeInfo.SetVariableFeedback(
 			string(code[node.Node.StartByte():node.Node.EndByte()]),
-			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
+			domain.Point(node.Node.StartPosition()),
 		)
 		if g.shouldFix {
-			writer := analysis.NewFileModifier(g, string(code[node.Node.StartByte():node.Node.EndByte()]))
-			writer.ModifyVariableName(node.Node, code, filepath)
+			g.fileModifier.ModifyVariableName(node.Node, code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]))
 		}
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "expression_list":

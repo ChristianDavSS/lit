@@ -4,7 +4,6 @@ import (
 	"CLI_App/cmd/adapters/analysis"
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
-	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	jsGrammar "github.com/tree-sitter/tree-sitter-javascript/bindings/go"
@@ -12,30 +11,32 @@ import (
 
 // javascript interface with LanguageData embedded
 type javascript struct {
-	shouldFix bool
-	data      types.LanguageData
+	shouldFix    bool
+	fileModifier analysis.FileModifier
+	data         types.LanguageData
 }
 
 func NewJSLanguage(pattern string, shouldFix bool) types.NodeManagement {
-	return &javascript{
+	js := &javascript{
 		shouldFix: shouldFix,
 		data: types.LanguageData{
 			Language: tree.NewLanguage(jsGrammar.Language()),
 			Queries:  buildJSQuery(pattern),
 		},
 	}
+	js.fileModifier = analysis.NewFileModifier(js)
+	return js
 }
 
 func (js javascript) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
+		nodeInfo.SetVariableFeedback(
 			string(code[node.Node.StartByte():node.Node.EndByte()]),
-			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
+			domain.Point(node.Node.StartPosition()),
 		)
 		if js.shouldFix {
-			writer := analysis.NewFileModifier(js, string(code[node.Node.StartByte():node.Node.EndByte()]))
-			writer.ModifyVariableName(node.Node, code, filepath)
+			js.fileModifier.ModifyVariableName(node.Node, code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]))
 		}
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":

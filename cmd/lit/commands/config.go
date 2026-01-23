@@ -10,7 +10,7 @@ import (
 func Configuration() *cobra.Command {
 	return &cobra.Command{
 		Use:   "config",
-		Short: "Configurate the scan variables.",
+		Short: "Configure the scan variables.",
 		Run: func(cmd *cobra.Command, args []string) {
 			idx := ui.GetNamingConvention()
 			jsonAdapter := config.NewJSONAdapter()

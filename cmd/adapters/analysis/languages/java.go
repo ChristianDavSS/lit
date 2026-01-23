@@ -4,25 +4,27 @@ import (
 	"CLI_App/cmd/adapters/analysis"
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
-	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	javaGrammar "github.com/tree-sitter/tree-sitter-java/bindings/go"
 )
 
 type java struct {
-	shouldFix bool
-	data      types.LanguageData
+	shouldFix    bool
+	fileModifier analysis.FileModifier
+	data         types.LanguageData
 }
 
 func NewJavaLanguage(pattern string, shouldFix bool) types.NodeManagement {
-	return &java{
+	j := &java{
 		shouldFix: shouldFix,
 		data: types.LanguageData{
 			Language: tree.NewLanguage(javaGrammar.Language()),
 			Queries:  buildJavaQuery(pattern),
 		},
 	}
+	j.fileModifier = analysis.NewFileModifier(j)
+	return j
 }
 
 func (j java) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
@@ -30,13 +32,12 @@ func (j java) ManageNode(captureNames []string, code []byte, filepath string, no
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
+		nodeInfo.SetVariableFeedback(
 			string(code[node.Node.StartByte():node.Node.EndByte()]),
-			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
+			domain.Point(node.Node.StartPosition()),
 		)
 		if j.shouldFix {
-			writer := analysis.NewFileModifier(j, string(code[node.Node.StartByte():node.Node.EndByte()]))
-			writer.ModifyVariableName(node.Node, code, filepath)
+			j.fileModifier.ModifyVariableName(node.Node, code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]))
 		}
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":

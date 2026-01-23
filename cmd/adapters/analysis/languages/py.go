@@ -12,31 +12,33 @@ import (
 
 // python: struct with LanguageInformation embedded
 type python struct {
-	shouldFix bool
-	data      types.LanguageData
+	shouldFix    bool
+	fileModifier analysis.FileModifier
+	data         types.LanguageData
 }
 
 func NewPythonLanguage(pattern string, shouldFix bool) types.NodeManagement {
-	return &python{
+	p := &python{
 		shouldFix: shouldFix,
 		data: types.LanguageData{
 			Language: tree.NewLanguage(pyGrammar.Language()),
 			Queries:  buildPythonQuery(pattern),
 		},
 	}
+	p.fileModifier = analysis.NewFileModifier(p)
+	return p
 }
 
 // ManageNode - > Function to implement the NodeManagement interface
 func (p python) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		nodeInfo.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
+		nodeInfo.SetVariableFeedback(
 			string(code[node.Node.StartByte():node.Node.EndByte()]),
-			node.Node.StartPosition().Row, node.Node.StartPosition().Column,
+			domain.Point(node.Node.StartPosition()),
 		)
 		if p.shouldFix {
-			writer := analysis.NewFileModifier(p, string(code[node.Node.StartByte():node.Node.EndByte()]))
-			writer.ModifyVariableName(node.Node, code, filepath)
+			p.fileModifier.ModifyVariableName(node.Node, code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]))
 		}
 		return
 	case node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment":

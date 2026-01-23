@@ -17,21 +17,19 @@ import (
 
 // FileModifier is -
 type FileModifier struct {
-	management          types.NodeManagement
-	varAppearancesQuery string
+	management types.NodeManagement
 }
 
-func NewFileModifier(management types.NodeManagement, varName string) FileModifier {
+func NewFileModifier(management types.NodeManagement) FileModifier {
 	return FileModifier{
-		management:          management,
-		varAppearancesQuery: management.GetVarAppearancesQuery(varName),
+		management: management,
 	}
 }
 
 // ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
 // Takes the node captured (the one we want to modify) and the path.
 // Only converts from one convention to another (safety conditions)
-func (f FileModifier) ModifyVariableName(node tree.Node, code []byte, filePath string) {
+func (f FileModifier) ModifyVariableName(node tree.Node, code []byte, filePath string, varName string) {
 	// currentVarName is the current name of the variable on the code
 	currentVarName := string(code[node.StartByte():node.EndByte()])
 
@@ -51,7 +49,7 @@ func (f FileModifier) ModifyVariableName(node tree.Node, code []byte, filePath s
 	root := GetAST(code, f.management.GetLanguageData().Language)
 	defer root.Close()
 	query, cursor, captures := GetCapturesByQueries(f.management.GetLanguageData().Language,
-		f.varAppearancesQuery, code, root.RootNode())
+		f.management.GetVarAppearancesQuery(varName), code, root.RootNode())
 	defer query.Close()
 	defer cursor.Close()
 
