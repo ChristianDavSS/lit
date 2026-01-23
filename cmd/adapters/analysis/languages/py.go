@@ -2,6 +2,7 @@ package languages
 
 import (
 	"CLI_App/cmd/adapters/analysis"
+	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 	"fmt"
 
@@ -12,13 +13,13 @@ import (
 // python: struct with LanguageInformation embedded
 type python struct {
 	shouldFix bool
-	data      domain.LanguageData
+	data      types.LanguageData
 }
 
-func NewPythonLanguage(pattern string, shouldFix bool) domain.NodeManagement {
+func NewPythonLanguage(pattern string, shouldFix bool) types.NodeManagement {
 	return &python{
 		shouldFix: shouldFix,
-		data: domain.LanguageData{
+		data: types.LanguageData{
 			Language: tree.NewLanguage(pyGrammar.Language()),
 			Queries:  buildPythonQuery(pattern),
 		},
@@ -68,7 +69,7 @@ func buildPythonQuery(pattern string) string {
 		"] @keyword"
 }
 
-func (p python) GetLanguageData() domain.LanguageData {
+func (p python) GetLanguageData() types.LanguageData {
 	return p.data
 }
 

@@ -2,6 +2,7 @@ package languages
 
 import (
 	"CLI_App/cmd/adapters/analysis"
+	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 	"path/filepath"
 )
@@ -21,7 +22,7 @@ func NewFileAnalyzer(shouldFix bool, activePattern string) *FileAnalyzer {
 // AnalyzeFile analyses the file via DFS (is executed in the scanner)
 func (analyzer *FileAnalyzer) AnalyzeFile(filePath string, code []byte) []*domain.FunctionData {
 	// Set the variable to save up the language of the current script
-	var activeLanguage domain.NodeManagement
+	var activeLanguage types.NodeManagement
 
 	// Save the language for the complexity
 	switch filepath.Ext(filePath)[1:] {

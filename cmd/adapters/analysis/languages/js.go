@@ -2,6 +2,7 @@ package languages
 
 import (
 	"CLI_App/cmd/adapters/analysis"
+	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 	"fmt"
 
@@ -12,13 +13,13 @@ import (
 // javascript interface with LanguageData embedded
 type javascript struct {
 	shouldFix bool
-	data      domain.LanguageData
+	data      types.LanguageData
 }
 
-func NewJSLanguage(pattern string, shouldFix bool) domain.NodeManagement {
+func NewJSLanguage(pattern string, shouldFix bool) types.NodeManagement {
 	return &javascript{
 		shouldFix: shouldFix,
-		data: domain.LanguageData{
+		data: types.LanguageData{
 			Language: tree.NewLanguage(jsGrammar.Language()),
 			Queries:  buildJSQuery(pattern),
 		},
@@ -76,7 +77,7 @@ func buildJSQuery(pattern string) string {
 		"] @keyword"
 }
 
-func (js javascript) GetLanguageData() domain.LanguageData {
+func (js javascript) GetLanguageData() types.LanguageData {
 	return js.data
 }
 

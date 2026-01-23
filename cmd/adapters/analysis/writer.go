@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/adapters/config"
 	"CLI_App/cmd/domain"
 	"fmt"
@@ -16,11 +17,11 @@ import (
 
 // FileModifier is -
 type FileModifier struct {
-	management          domain.NodeManagement
+	management          types.NodeManagement
 	varAppearancesQuery string
 }
 
-func NewFileModifier(management domain.NodeManagement, varName string) FileModifier {
+func NewFileModifier(management types.NodeManagement, varName string) FileModifier {
 	return FileModifier{
 		management:          management,
 		varAppearancesQuery: management.GetVarAppearancesQuery(varName),

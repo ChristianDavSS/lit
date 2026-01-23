@@ -2,6 +2,7 @@ package languages
 
 import (
 	"CLI_App/cmd/adapters/analysis"
+	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 	"fmt"
 
@@ -11,13 +12,13 @@ import (
 
 type golang struct {
 	shouldFix bool
-	data      domain.LanguageData
+	data      types.LanguageData
 }
 
-func NewGolangLanguage(pattern string, shouldFix bool) domain.NodeManagement {
+func NewGolangLanguage(pattern string, shouldFix bool) types.NodeManagement {
 	return &golang{
 		shouldFix: shouldFix,
-		data: domain.LanguageData{
+		data: types.LanguageData{
 			Language: tree.NewLanguage(goGrammar.Language()),
 			Queries:  buildGolangQuery(pattern),
 		},
@@ -63,7 +64,7 @@ func buildGolangQuery(pattern string) string {
 		"] @keyword"
 }
 
-func (g golang) GetLanguageData() domain.LanguageData {
+func (g golang) GetLanguageData() types.LanguageData {
 	return g.data
 }
 

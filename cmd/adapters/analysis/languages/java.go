@@ -2,6 +2,7 @@ package languages
 
 import (
 	"CLI_App/cmd/adapters/analysis"
+	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 	"fmt"
 
@@ -11,13 +12,13 @@ import (
 
 type java struct {
 	shouldFix bool
-	data      domain.LanguageData
+	data      types.LanguageData
 }
 
-func NewJavaLanguage(pattern string, shouldFix bool) domain.NodeManagement {
+func NewJavaLanguage(pattern string, shouldFix bool) types.NodeManagement {
 	return &java{
 		shouldFix: shouldFix,
-		data: domain.LanguageData{
+		data: types.LanguageData{
 			Language: tree.NewLanguage(javaGrammar.Language()),
 			Queries:  buildJavaQuery(pattern),
 		},
@@ -67,7 +68,7 @@ func buildJavaQuery(pattern string) string {
 		"] @keyword"
 }
 
-func (j java) GetLanguageData() domain.LanguageData {
+func (j java) GetLanguageData() types.LanguageData {
 	return j.data
 }
 
