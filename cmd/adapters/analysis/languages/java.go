@@ -67,12 +67,8 @@ func buildJavaQuery(pattern string) string {
 		"] @keyword"
 }
 
-func (j java) GetLanguage() *tree.Language {
-	return j.data.Language
-}
-
-func (j java) GetQueries() string {
-	return j.data.Queries
+func (j java) GetLanguageData() domain.LanguageData {
+	return j.data
 }
 
 func (j java) GetVarAppearancesQuery(name string) string {

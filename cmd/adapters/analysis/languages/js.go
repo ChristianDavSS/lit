@@ -76,12 +76,8 @@ func buildJSQuery(pattern string) string {
 		"] @keyword"
 }
 
-func (js javascript) GetLanguage() *tree.Language {
-	return js.data.Language
-}
-
-func (js javascript) GetQueries() string {
-	return js.data.Queries
+func (js javascript) GetLanguageData() domain.LanguageData {
+	return js.data
 }
 
 func (js javascript) GetVarAppearancesQuery(name string) string {

@@ -4,7 +4,6 @@ import (
 	"CLI_App/cmd/domain"
 	_ "CLI_App/cmd/domain"
 	encoder "encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -32,7 +31,6 @@ func (json *JsonAdapter) GetConfig() *domain.Config {
 	if err != nil {
 		os.Exit(1)
 	}
-	fmt.Println("DTO:", dto)
 	return &domain.Config{
 		NamingConventionIndex: dto.NamingConventionIndex,
 	}
@@ -69,6 +67,5 @@ func (json *JsonAdapter) readJsonData() []byte {
 		os.Exit(1)
 	}
 
-	fmt.Println(string(file))
 	return file
 }

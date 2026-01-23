@@ -63,12 +63,8 @@ func buildGolangQuery(pattern string) string {
 		"] @keyword"
 }
 
-func (g golang) GetLanguage() *tree.Language {
-	return g.data.Language
-}
-
-func (g golang) GetQueries() string {
-	return g.data.Queries
+func (g golang) GetLanguageData() domain.LanguageData {
+	return g.data
 }
 
 func (g golang) GetVarAppearancesQuery(name string) string {

@@ -25,7 +25,7 @@ type FunctionData struct {
 	Feedback                 string
 }
 
-// Directory saves up the dir name with it's content
+// Directory saves up the dir name with its content
 type Directory struct {
 	DirName string
 	Content []os.DirEntry
@@ -44,8 +44,7 @@ type Config struct {
 // NodeManagement defines the functions every language struct uses
 type NodeManagement interface {
 	ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *FunctionData)
-	GetLanguage() *tree.Language
-	GetQueries() string
+	GetLanguageData() LanguageData
 	GetVarAppearancesQuery(name string) string
 }
 

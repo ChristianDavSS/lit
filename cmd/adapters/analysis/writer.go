@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"CLI_App/cmd/adapters/config"
 	"CLI_App/cmd/domain"
 	"fmt"
 	"os"
@@ -46,9 +47,9 @@ func (f FileModifier) ModifyVariableName(node tree.Node, code []byte, filePath s
 	newVarName := refactorVarName(tokens)
 
 	// get the query, cursor and captures (applying the query to fetch them)
-	root := GetAST(code, f.management.GetLanguage())
+	root := GetAST(code, f.management.GetLanguageData().Language)
 	defer root.Close()
-	query, cursor, captures := GetCapturesByQueries(f.management.GetLanguage(),
+	query, cursor, captures := GetCapturesByQueries(f.management.GetLanguageData().Language,
 		f.varAppearancesQuery, code, root.RootNode())
 	defer query.Close()
 	defer cursor.Close()
@@ -144,7 +145,8 @@ func getTokens(upperIndexes []int16, line string) []string {
 func refactorVarName(tokens []string) string {
 	var newName = tokens[0]
 
-	switch 5 {
+	jsonAdapter := config.NewJSONAdapter()
+	switch jsonAdapter.GetConfig().NamingConventionIndex {
 	case 2:
 		newName = ""
 		camelCases(&newName, tokens)
@@ -158,7 +160,7 @@ func refactorVarName(tokens []string) string {
 	return newName
 }
 
-// function with the logics for the camelCase and CamelCase convertions
+// function with the logics for the camelCase and CamelCase conversions
 func camelCases(target *string, tokens []string) {
 	for _, token := range tokens {
 		*target += string(token[0]-32) + token[1:]

@@ -44,10 +44,10 @@ func GetCapturesByQueries(language *tree.Language, queries string, code []byte, 
 // CyclicalComplexity Function that calculates the cyclical complexity of the code. Useful for the user feedback.
 func CyclicalComplexity(languageInfo domain.NodeManagement, code []byte, filepath string) []*domain.FunctionData {
 	// Get our ast bases in our code and grammar
-	ast := GetAST(code, languageInfo.GetLanguage())
+	ast := GetAST(code, languageInfo.GetLanguageData().Language)
 	defer ast.Close()
 	// Get the basics to iterate through the captures and keep the data
-	query, cursor, captures := GetCapturesByQueries(languageInfo.GetLanguage(), languageInfo.GetQueries(), code, ast.RootNode())
+	query, cursor, captures := GetCapturesByQueries(languageInfo.GetLanguageData().Language, languageInfo.GetLanguageData().Queries, code, ast.RootNode())
 	defer query.Close()
 	defer cursor.Close()
 	// List used as a stack to get the subfunctions and it's complexity right

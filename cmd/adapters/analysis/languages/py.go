@@ -45,7 +45,6 @@ func (p python) ManageNode(captureNames []string, code []byte, filepath string, 
 }
 
 func buildPythonQuery(pattern string) string {
-	fmt.Println("PATTERN:", pattern)
 	return "(function_definition name: (identifier) @function.name " +
 		"parameters: (parameters) @function.parameters " +
 		"body: (block) @function.body) @function " +
@@ -69,12 +68,8 @@ func buildPythonQuery(pattern string) string {
 		"] @keyword"
 }
 
-func (p python) GetLanguage() *tree.Language {
-	return p.data.Language
-}
-
-func (p python) GetQueries() string {
-	return p.data.Queries
+func (p python) GetLanguageData() domain.LanguageData {
+	return p.data
 }
 
 func (p python) GetVarAppearancesQuery(name string) string {
