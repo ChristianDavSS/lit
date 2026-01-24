@@ -27,10 +27,7 @@ func NewFileModifier(management types.NodeManagement) FileModifier {
 // ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
 // Takes the initial variable name and converts it
 // Only converts from one convention to another (safety conditions)
-func (f FileModifier) ModifyVariableName(code []byte, filePath, varName string, funcInfo *domain.FunctionData, shouldFix bool) {
-	// Set the initial feedback
-	funcInfo.SetVariableFeedback(varName, funcInfo.StartPosition)
-
+func (f FileModifier) ModifyVariableName(code []byte, filePath, varName string, shouldFix bool) {
 	// If the variable isn't  camelCase, CamelCase or snake_case, we don't modify it (for code safety)
 	if !domain.RegexMatch(domain.CamelCase+"|"+domain.SnakeCase, varName) || !shouldFix {
 		return

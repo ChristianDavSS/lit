@@ -32,7 +32,9 @@ func (g golang) ManageNode(captureNames []string, code []byte, filepath string, 
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		g.fileModifier.ModifyVariableName(code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), nodeInfo, g.shouldFix)
+		// Set the initial feedback
+		nodeInfo.SetVariableFeedback(string(code[node.Node.StartByte():node.Node.EndByte()]), domain.Point(node.Node.StartPosition()))
+		g.fileModifier.ModifyVariableName(code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), g.shouldFix)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "expression_list":
 		return
