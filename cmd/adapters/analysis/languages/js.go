@@ -31,13 +31,7 @@ func NewJSLanguage(pattern string, shouldFix bool) types.NodeManagement {
 func (js javascript) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		nodeInfo.SetVariableFeedback(
-			string(code[node.Node.StartByte():node.Node.EndByte()]),
-			domain.Point(node.Node.StartPosition()),
-		)
-		if js.shouldFix {
-			js.fileModifier.ModifyVariableName(node.Node, code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]))
-		}
+		js.fileModifier.ModifyVariableName(code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), nodeInfo, js.shouldFix)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return

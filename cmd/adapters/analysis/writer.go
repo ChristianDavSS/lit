@@ -7,15 +7,13 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	tree "github.com/tree-sitter/go-tree-sitter"
 )
 
 /*
  * writer.go - > file to write some data on a file using some ast queries.
  */
 
-// FileModifier is -
+// FileModifier is an adapter for modifying data into the code script. This way, we can manage the file modification safely
 type FileModifier struct {
 	management types.NodeManagement
 }
@@ -27,21 +25,21 @@ func NewFileModifier(management types.NodeManagement) FileModifier {
 }
 
 // ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
-// Takes the node captured (the one we want to modify) and the path.
+// Takes the initial variable name and converts it
 // Only converts from one convention to another (safety conditions)
-func (f FileModifier) ModifyVariableName(node tree.Node, code []byte, filePath string, varName string) {
-	// currentVarName is the current name of the variable on the code
-	currentVarName := string(code[node.StartByte():node.EndByte()])
+func (f FileModifier) ModifyVariableName(code []byte, filePath, varName string, funcInfo *domain.FunctionData, shouldFix bool) {
+	// Set the initial feedback
+	funcInfo.SetVariableFeedback(varName, funcInfo.StartPosition)
 
 	// If the variable isn't  camelCase, CamelCase or snake_case, we don't modify it (for code safety)
-	if !domain.RegexMatch(domain.CamelCase+"|"+domain.SnakeCase, currentVarName) {
+	if !domain.RegexMatch(domain.CamelCase+"|"+domain.SnakeCase, varName) || !shouldFix {
 		return
 	}
 
 	// get the indexes where there's a separator
-	upperIndexes := getSeparatorIndexes(currentVarName)
+	upperIndexes := getSeparatorIndexes(varName)
 	// with the indexes, separate the line into valid tokens
-	tokens := getTokens(upperIndexes, currentVarName)
+	tokens := getTokens(upperIndexes, varName)
 	// get the new variable name (according to the current naming conventions selected)
 	newVarName := refactorVarName(tokens)
 
@@ -66,7 +64,7 @@ func (f FileModifier) ModifyVariableName(node tree.Node, code []byte, filePath s
 			break
 		}
 		// get the node from the captures (just one capture per match)
-		node = match.Captures[0].Node
+		node := match.Captures[0].Node
 		// get the current line of code (the one that'll be modified
 		str := slicedCode[node.StartPosition().Row]
 		// check if there's a value of this row in the cache
@@ -82,7 +80,7 @@ func (f FileModifier) ModifyVariableName(node tree.Node, code []byte, filePath s
 		slicedCode[node.StartPosition().Row] = str[:node.StartPosition().Column+value] + newVarName + str[node.EndPosition().Column+value:]
 
 		// update the value of the row, adding up the difference of lengths
-		diff[node.StartPosition().Row] += uint(len(newVarName) - len(currentVarName))
+		diff[node.StartPosition().Row] += uint(len(newVarName) - len(varName))
 	}
 
 	// Write the modified code into the file (with the new variable names where they belong)

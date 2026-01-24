@@ -33,13 +33,7 @@ func NewPythonLanguage(pattern string, shouldFix bool) types.NodeManagement {
 func (p python) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		nodeInfo.SetVariableFeedback(
-			string(code[node.Node.StartByte():node.Node.EndByte()]),
-			domain.Point(node.Node.StartPosition()),
-		)
-		if p.shouldFix {
-			p.fileModifier.ModifyVariableName(node.Node, code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]))
-		}
+		p.fileModifier.ModifyVariableName(code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), nodeInfo, p.shouldFix)
 		return
 	case node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment":
 		return

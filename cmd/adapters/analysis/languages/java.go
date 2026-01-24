@@ -32,13 +32,7 @@ func (j java) ManageNode(captureNames []string, code []byte, filepath string, no
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		nodeInfo.SetVariableFeedback(
-			string(code[node.Node.StartByte():node.Node.EndByte()]),
-			domain.Point(node.Node.StartPosition()),
-		)
-		if j.shouldFix {
-			j.fileModifier.ModifyVariableName(node.Node, code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]))
-		}
+		j.fileModifier.ModifyVariableName(code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), nodeInfo, j.shouldFix)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
