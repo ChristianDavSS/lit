@@ -44,7 +44,7 @@ func (s *ScanService) scanFile(filename string, code []byte) {
 	}
 	// Execute the file analyzer algorithm (infrastructure because it's using frameworks)
 	functions := s.analyzer.AnalyzeFile(filename, code)
-	if len(functions) > 0 {
+	if functions != nil && len(functions) > 0 {
 		s.mu.Lock()
 		s.dangerousFunctions[filename] = functions
 		s.mu.Unlock()
