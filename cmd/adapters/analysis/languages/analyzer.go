@@ -34,6 +34,8 @@ func (analyzer *FileAnalyzer) AnalyzeFile(filePath string, code []byte) []*domai
 		activeLanguage = NewJavaLanguage(analyzer.activePattern, analyzer.shouldFix)
 	case "py":
 		activeLanguage = NewPythonLanguage(analyzer.activePattern, analyzer.shouldFix)
+	default:
+		return nil
 	}
 
 	// Calculate the cyclical complexity and get the functions returned

@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 	"fmt"
 	"os"
@@ -42,7 +43,7 @@ func GetCapturesByQueries(language *tree.Language, queries string, code []byte, 
 }
 
 // CyclicalComplexity Function that calculates the cyclical complexity of the code. Useful for the user feedback.
-func CyclicalComplexity(languageInfo domain.NodeManagement, code []byte, filepath string) []*domain.FunctionData {
+func CyclicalComplexity(languageInfo types.NodeManagement, code []byte, filepath string) []*domain.FunctionData {
 	// Get our ast bases in our code and grammar
 	ast := GetAST(code, languageInfo.GetLanguageData().Language)
 	defer ast.Close()
