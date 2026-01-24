@@ -33,10 +33,9 @@ func (f FileModifier) ModifyVariableName(code []byte, filePath, varName string, 
 		return
 	}
 
-	// get the indexes where there's a separator
-	upperIndexes := getSeparatorIndexes(varName)
 	// with the indexes, separate the line into valid tokens
-	tokens := getTokens(upperIndexes, varName)
+	tokens := getTokens(varName)
+	fmt.Println(tokens)
 	// get the new variable name (according to the current naming conventions selected)
 	newVarName := refactorVarName(tokens)
 
@@ -90,49 +89,25 @@ func (f FileModifier) ModifyVariableName(code []byte, filePath, varName string, 
 
 // ---- Writing on files and renaming ----
 // getSeparatorIndexes: get the indexes on the line of code where there's a separator (uppercase or underscore)
-func getSeparatorIndexes(line string) []int16 {
+func getTokens(line string) []string {
 	// slice to save up the indexes
-	var indexes []int16
+	var tokens []string
+	var i int
 
 	// iterate through the line of code
-	for i, ch := range line {
-		// if the character is an uppercase letter or an underscore, we save the index of that
-		if ch >= 65 && ch <= 90 && i > 0 || ch == 95 {
-			indexes = append(indexes, int16(i))
+	for j, ch := range line {
+		if ch == 95 || ch >= 65 && ch <= 90 {
+			tokens = append(tokens, strings.ToLower(line[i:j]))
+			if ch == 95 {
+				i = j + 1
+			} else {
+				i = j
+			}
 		}
+		j++
 	}
 
-	return indexes
-}
-
-// getTokens: gets the tokens (valid substrings) from a line of code with a determined naming convention
-func getTokens(upperIndexes []int16, line string) []string {
-	// slice to save up every cleaned token
-	var tokens []string
-	// variable to keep track of the previous index of the list
-	var prevIdx int16
-
-	// traverse our indexes
-	for i, currIdx := range upperIndexes {
-		// variable that is just 0 or 1 depending on the previous index value in the line of code.
-		var sum int16
-		// if the line of code in the position of the previous index is an underscore, we sum it up to one
-		if line[prevIdx] == 95 {
-			sum++
-		}
-		// we add up the clean token into the slice of tokens
-		tokens = append(tokens, strings.ToLower(line[prevIdx+sum:currIdx]))
-		// set up the previous token
-		prevIdx = currIdx
-
-		// if it's the last iteration, we add the values without a limit
-		if i >= len(upperIndexes)-1 {
-			tokens = append(tokens, strings.ToLower(line[prevIdx+sum:]))
-		}
-	}
-
-	// return the clean slice of tokens
-	return tokens
+	return append(tokens, strings.ToLower(line[i:]))
 }
 
 // refactorVarName: with the strings split in tokens, returns a []byte of the new line of code.
