@@ -35,7 +35,7 @@ func (p python) ManageNode(captureNames []string, code []byte, filepath string, 
 	case captureNames[node.Index] == "variable.name":
 		// Set the initial feedback
 		nodeInfo.SetVariableFeedback(string(code[node.Node.StartByte():node.Node.EndByte()]), domain.Point(node.Node.StartPosition()))
-		p.fileModifier.ModifyVariableName(code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), p.shouldFix)
+		p.fileModifier.ModifyVariableName(filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), p.shouldFix)
 		return
 	case node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment":
 		return

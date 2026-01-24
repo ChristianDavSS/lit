@@ -27,15 +27,16 @@ func NewFileModifier(management types.NodeManagement) FileModifier {
 // ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
 // Takes the initial variable name and converts it
 // Only converts from one convention to another (safety conditions)
-func (f FileModifier) ModifyVariableName(code []byte, filePath, varName string, shouldFix bool) {
+func (f FileModifier) ModifyVariableName(filePath, varName string, shouldFix bool) {
 	// If the variable isn't  camelCase, CamelCase or snake_case, we don't modify it (for code safety)
 	if !domain.RegexMatch(domain.CamelCase+"|"+domain.SnakeCase, varName) || !shouldFix {
 		return
 	}
 
+	code, _ := os.ReadFile(filePath)
+
 	// with the indexes, separate the line into valid tokens
 	tokens := getTokens(varName)
-	fmt.Println(tokens)
 	// get the new variable name (according to the current naming conventions selected)
 	newVarName := refactorVarName(tokens)
 
@@ -79,6 +80,7 @@ func (f FileModifier) ModifyVariableName(code []byte, filePath, varName string, 
 		diff[node.StartPosition().Row] += uint(len(newVarName) - len(varName))
 	}
 
+	fmt.Println("CODE:", strings.Join(slicedCode, "\n"))
 	// Write the modified code into the file (with the new variable names where they belong)
 	err := os.WriteFile(filePath, []byte(strings.Join(slicedCode, "\n")), 0644)
 	if err != nil {

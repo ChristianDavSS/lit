@@ -33,7 +33,7 @@ func (js javascript) ManageNode(captureNames []string, code []byte, filepath str
 	case captureNames[node.Index] == "variable.name":
 		// Set the initial feedback
 		nodeInfo.SetVariableFeedback(string(code[node.Node.StartByte():node.Node.EndByte()]), domain.Point(node.Node.StartPosition()))
-		js.fileModifier.ModifyVariableName(code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), js.shouldFix)
+		js.fileModifier.ModifyVariableName(filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), js.shouldFix)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
