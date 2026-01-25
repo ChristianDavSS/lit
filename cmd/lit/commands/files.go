@@ -2,6 +2,7 @@ package commands
 
 import (
 	"CLI_App/cmd/adapters/analysis/languages"
+	"CLI_App/cmd/adapters/cache"
 	"CLI_App/cmd/adapters/config"
 	"CLI_App/cmd/domain"
 	"CLI_App/cmd/service"
@@ -20,6 +21,7 @@ func Files() *cobra.Command {
 			jsonAdapter := config.NewJSONAdapter()
 			scanner := service.NewScannerService(
 				languages.NewFileAnalyzer(fix, domain.Conventions[jsonAdapter.GetConfig().NamingConventionIndex]),
+				cache.NewCache[string, []string](),
 			)
 
 			if loc {

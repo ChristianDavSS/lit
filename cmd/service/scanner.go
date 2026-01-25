@@ -14,13 +14,15 @@ type ScanService struct {
 	wg                 sync.WaitGroup
 	mu                 sync.Mutex
 	analyzer           domain.Analyzer
+	cache              domain.CacheStore[string, []string]
 	dangerousFunctions map[string][]*domain.FunctionData
 	languagesMap       map[string]int
 }
 
-func NewScannerService(analyzer domain.Analyzer) ScanService {
+func NewScannerService(analyzer domain.Analyzer, cache domain.CacheStore[string, []string]) ScanService {
 	return ScanService{
 		analyzer:           analyzer,
+		cache:              cache,
 		dangerousFunctions: make(map[string][]*domain.FunctionData),
 		languagesMap:       make(map[string]int),
 	}
@@ -37,7 +39,7 @@ func (s *ScanService) ExecuteLOC() {
 }
 
 // Internal functions to analyze code
-func (s *ScanService) scanFile(filename string, code []byte) {
+func (s *ScanService) scanFile(filename string, code *[]string) {
 	defer s.wg.Done()
 	if code == nil {
 		return
@@ -49,20 +51,22 @@ func (s *ScanService) scanFile(filename string, code []byte) {
 		s.dangerousFunctions[filename] = functions
 		s.mu.Unlock()
 	}
+	// Modify the cache
+	s.cache.SetCache(filename, *code)
+
+	WriteOnFile(filename, []byte(strings.Join(*code, "\n")))
 }
 
-func (s *ScanService) loc(filename string, code []byte) {
+func (s *ScanService) loc(filename string, code *[]string) {
 	defer s.wg.Done()
-	// Split the code into lines
-	lines := strings.Split(string(code), "\n")
 	// Sum up the stored value with the total lines found in that script.
 	s.mu.Lock()
-	s.languagesMap[filepath.Ext(filename)[1:]] += len(lines)
+	s.languagesMap[filepath.Ext(filename)[1:]] += len(*code)
 	s.mu.Unlock()
 }
 
 // Navigate through the file system with a DFS algorithm.
-func (s *ScanService) traverseFiles(fileFunction func(filename string, code []byte), validScriptPattern string) {
+func (s *ScanService) traverseFiles(fileFunction func(filename string, code *[]string), validScriptPattern string) {
 	stack := []domain.Directory{{"", GetDirEntries(GetWorkingDirectory())}}
 	for len(stack) > 0 {
 		// Extract the last element from the stack
@@ -84,9 +88,17 @@ func (s *ScanService) traverseFiles(fileFunction func(filename string, code []by
 				if r, _ := regexp.Match(validScriptPattern, []byte(v.Name())); !r {
 					continue
 				}
-				file := ReadFile(files.DirName + v.Name())
+				// Create the file path
+				path := files.DirName + v.Name()
+
+				file, ok := s.cache.GetCache(path)
+				if !ok {
+					file = strings.Split(string(ReadFile(path)), "\n")
+					s.cache.SetCache(path, file)
+				}
+
 				s.wg.Add(1)
-				go fileFunction(files.DirName+v.Name(), file)
+				go fileFunction(path, &file)
 			}
 		}
 	}

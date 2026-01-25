@@ -4,8 +4,6 @@ import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/adapters/config"
 	"CLI_App/cmd/domain"
-	"fmt"
-	"os"
 	"strings"
 )
 
@@ -27,13 +25,11 @@ func NewFileModifier(management types.NodeManagement) FileModifier {
 // ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
 // Takes the initial variable name and converts it
 // Only converts from one convention to another (safety conditions)
-func (f FileModifier) ModifyVariableName(filePath, varName string, shouldFix bool) {
+func (f FileModifier) ModifyVariableName(code *[]string, filePath, varName string, shouldFix bool) {
 	// If the variable isn't  camelCase, CamelCase or snake_case, we don't modify it (for code safety)
 	if !domain.RegexMatch(domain.CamelCase+"|"+domain.SnakeCase, varName) || !shouldFix {
 		return
 	}
-
-	code, _ := os.ReadFile(filePath)
 
 	// with the indexes, separate the line into valid tokens
 	tokens := getTokens(varName)
@@ -50,8 +46,6 @@ func (f FileModifier) ModifyVariableName(filePath, varName string, shouldFix boo
 
 	// cache of the sum of the difference between lengths of the variables
 	diff := make(map[uint]uint)
-	// slice the code into lines (just as the script
-	slicedCode := strings.Split(string(code), "\n")
 
 	// loop through the node captures
 	for {
@@ -63,7 +57,7 @@ func (f FileModifier) ModifyVariableName(filePath, varName string, shouldFix boo
 		// get the node from the captures (just one capture per match)
 		node := match.Captures[0].Node
 		// get the current line of code (the one that'll be modified
-		str := slicedCode[node.StartPosition().Row]
+		str := (*code)[node.StartPosition().Row]
 		// check if there's a value of this row in the cache
 		_, ok := diff[node.StartPosition().Row]
 		// if there's not, we initialize it to 0
@@ -74,18 +68,10 @@ func (f FileModifier) ModifyVariableName(filePath, varName string, shouldFix boo
 		value := diff[node.StartPosition().Row]
 
 		// modify the line of code using the cache and slicing
-		slicedCode[node.StartPosition().Row] = str[:node.StartPosition().Column+value] + newVarName + str[node.EndPosition().Column+value:]
+		(*code)[node.StartPosition().Row] = str[:node.StartPosition().Column+value] + newVarName + str[node.EndPosition().Column+value:]
 
 		// update the value of the row, adding up the difference of lengths
 		diff[node.StartPosition().Row] += uint(len(newVarName) - len(varName))
-	}
-
-	fmt.Println("CODE:", strings.Join(slicedCode, "\n"))
-	// Write the modified code into the file (with the new variable names where they belong)
-	err := os.WriteFile(filePath, []byte(strings.Join(slicedCode, "\n")), 0644)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error trying to write the variable name into the file...")
-		os.Exit(1)
 	}
 }
 

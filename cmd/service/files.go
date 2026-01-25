@@ -40,3 +40,11 @@ func ReadFile(name string) []byte {
 	}
 	return file
 }
+
+func WriteOnFile(path string, data []byte) {
+	err := os.WriteFile(path, data, 0644)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error trying to write the variable name into the file...")
+		os.Exit(1)
+	}
+}

@@ -20,7 +20,7 @@ func NewFileAnalyzer(shouldFix bool, activePattern string) *FileAnalyzer {
 }
 
 // AnalyzeFile analyses the file via DFS (is executed in the scanner)
-func (analyzer *FileAnalyzer) AnalyzeFile(filePath string, code []byte) []*domain.FunctionData {
+func (analyzer *FileAnalyzer) AnalyzeFile(filePath string, code *[]string) []*domain.FunctionData {
 	// Set the variable to save up the language of the current script
 	var activeLanguage types.NodeManagement
 

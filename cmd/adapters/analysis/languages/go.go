@@ -27,14 +27,22 @@ func NewGolangLanguage(pattern string, shouldFix bool) types.NodeManagement {
 	return g
 }
 
-func (g golang) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (g golang) ManageNode(captureNames []string, code *[]string, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
 		// Set the initial feedback
-		nodeInfo.SetVariableFeedback(string(code[node.Node.StartByte():node.Node.EndByte()]), domain.Point(node.Node.StartPosition()))
-		g.fileModifier.ModifyVariableName(filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), g.shouldFix)
+		nodeInfo.SetVariableFeedback(
+			(*code)[node.Node.StartPosition().Row][node.Node.StartPosition().Column:node.Node.EndPosition().Column],
+			domain.Point(node.Node.StartPosition()),
+		)
+		g.fileModifier.ModifyVariableName(
+			code,
+			filepath,
+			(*code)[node.Node.StartPosition().Row][node.Node.StartPosition().Column:node.Node.EndPosition().Column],
+			g.shouldFix,
+		)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "expression_list":
 		return

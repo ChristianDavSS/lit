@@ -27,14 +27,22 @@ func NewJavaLanguage(pattern string, shouldFix bool) types.NodeManagement {
 	return j
 }
 
-func (j java) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (j java) ManageNode(captureNames []string, code *[]string, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
 		// Set the initial feedback
-		nodeInfo.SetVariableFeedback(string(code[node.Node.StartByte():node.Node.EndByte()]), domain.Point(node.Node.StartPosition()))
-		j.fileModifier.ModifyVariableName(filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), j.shouldFix)
+		nodeInfo.SetVariableFeedback(
+			(*code)[node.Node.StartPosition().Row][node.Node.StartPosition().Column:node.Node.EndPosition().Column],
+			domain.Point(node.Node.StartPosition()),
+		)
+		j.fileModifier.ModifyVariableName(
+			code,
+			filepath,
+			(*code)[node.Node.StartPosition().Row][node.Node.StartPosition().Column:node.Node.EndPosition().Column],
+			j.shouldFix,
+		)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
