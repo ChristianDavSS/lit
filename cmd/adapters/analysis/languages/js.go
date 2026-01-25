@@ -28,25 +28,28 @@ func NewJSLanguage(pattern string, shouldFix bool) types.NodeManagement {
 	return js
 }
 
-func (js javascript) ManageNode(captureNames []string, code *[]string, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (js javascript) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		// Set the initial feedback
-		nodeInfo.SetVariableFeedback(
-			(*code)[node.Node.StartPosition().Row][node.Node.StartPosition().Column:node.Node.EndPosition().Column],
-			domain.Point(node.Node.StartPosition()),
-		)
-		js.fileModifier.ModifyVariableName(
-			code,
-			filepath,
-			(*code)[node.Node.StartPosition().Row][node.Node.StartPosition().Column:node.Node.EndPosition().Column],
-			js.shouldFix,
-		)
+		js.variableManagement(node, nodeInfo, code)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
 	}
 	nodeInfo.Complexity++
+}
+
+func (js javascript) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
+	// Set the initial feedback
+	functionData.SetVariableFeedback(
+		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
+		domain.Point(varNode.Node.StartPosition()),
+	)
+	js.fileModifier.ModifyVariableName(
+		code,
+		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
+		js.shouldFix,
+	)
 }
 
 func buildJSQuery(pattern string) string {

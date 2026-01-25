@@ -27,22 +27,12 @@ func NewGolangLanguage(pattern string, shouldFix bool) types.NodeManagement {
 	return g
 }
 
-func (g golang) ManageNode(captureNames []string, code *[]string, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (g golang) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		// Set the initial feedback
-		nodeInfo.SetVariableFeedback(
-			(*code)[node.Node.StartPosition().Row][node.Node.StartPosition().Column:node.Node.EndPosition().Column],
-			domain.Point(node.Node.StartPosition()),
-		)
-		g.fileModifier.ModifyVariableName(
-			code,
-			filepath,
-			(*code)[node.Node.StartPosition().Row][node.Node.StartPosition().Column:node.Node.EndPosition().Column],
-			g.shouldFix,
-		)
+		g.variableManagement(node, nodeInfo, code)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "expression_list":
 		return
@@ -50,6 +40,19 @@ func (g golang) ManageNode(captureNames []string, code *[]string, filepath strin
 		nodeInfo.Complexity++
 	}
 	nodeInfo.Complexity++
+}
+
+func (g golang) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
+	// Set the initial feedback
+	functionData.SetVariableFeedback(
+		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
+		domain.Point(varNode.Node.StartPosition()),
+	)
+	g.fileModifier.ModifyVariableName(
+		code,
+		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
+		g.shouldFix,
+	)
 }
 
 func buildGolangQuery(pattern string) string {

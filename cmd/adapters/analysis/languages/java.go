@@ -27,22 +27,12 @@ func NewJavaLanguage(pattern string, shouldFix bool) types.NodeManagement {
 	return j
 }
 
-func (j java) ManageNode(captureNames []string, code *[]string, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (j java) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		// Set the initial feedback
-		nodeInfo.SetVariableFeedback(
-			(*code)[node.Node.StartPosition().Row][node.Node.StartPosition().Column:node.Node.EndPosition().Column],
-			domain.Point(node.Node.StartPosition()),
-		)
-		j.fileModifier.ModifyVariableName(
-			code,
-			filepath,
-			(*code)[node.Node.StartPosition().Row][node.Node.StartPosition().Column:node.Node.EndPosition().Column],
-			j.shouldFix,
-		)
+		j.variableManagement(node, nodeInfo, code)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
@@ -50,6 +40,19 @@ func (j java) ManageNode(captureNames []string, code *[]string, filepath string,
 		nodeInfo.Complexity++
 	}
 	nodeInfo.Complexity++
+}
+
+func (j java) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
+	// Set the initial feedback
+	functionData.SetVariableFeedback(
+		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
+		domain.Point(varNode.Node.StartPosition()),
+	)
+	j.fileModifier.ModifyVariableName(
+		code,
+		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
+		j.shouldFix,
+	)
 }
 
 func buildJavaQuery(pattern string) string {
