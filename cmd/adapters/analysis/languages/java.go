@@ -1,7 +1,6 @@
 package languages
 
 import (
-	"CLI_App/cmd/adapters/analysis"
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 
@@ -10,31 +9,24 @@ import (
 )
 
 type java struct {
-	shouldFix    bool
-	fileModifier analysis.FileModifier
-	data         types.LanguageData
+	data types.LanguageData
 }
 
-func NewJavaLanguage(pattern string, shouldFix bool) types.NodeManagement {
-	j := &java{
-		shouldFix: shouldFix,
+func NewJavaLanguage(pattern string) types.NodeManagement {
+	return &java{
 		data: types.LanguageData{
 			Language: tree.NewLanguage(javaGrammar.Language()),
 			Queries:  buildJavaQuery(pattern),
 		},
 	}
-	j.fileModifier = analysis.NewFileModifier(j)
-	return j
 }
 
-func (j java) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (j java) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		// Set the initial feedback
-		nodeInfo.SetVariableFeedback(string(code[node.Node.StartByte():node.Node.EndByte()]), domain.Point(node.Node.StartPosition()))
-		j.fileModifier.ModifyVariableName(code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), j.shouldFix)
+		j.variableManagement(node, nodeInfo, code)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
@@ -42,6 +34,14 @@ func (j java) ManageNode(captureNames []string, code []byte, filepath string, no
 		nodeInfo.Complexity++
 	}
 	nodeInfo.Complexity++
+}
+
+func (j java) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
+	// Set the initial feedback
+	functionData.SetVariableFeedback(
+		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
+		domain.Point(varNode.Node.StartPosition()),
+	)
 }
 
 func buildJavaQuery(pattern string) string {

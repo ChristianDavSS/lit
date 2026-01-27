@@ -1,7 +1,6 @@
 package languages
 
 import (
-	"CLI_App/cmd/adapters/analysis"
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 
@@ -11,34 +10,35 @@ import (
 
 // javascript interface with LanguageData embedded
 type javascript struct {
-	shouldFix    bool
-	fileModifier analysis.FileModifier
-	data         types.LanguageData
+	data types.LanguageData
 }
 
-func NewJSLanguage(pattern string, shouldFix bool) types.NodeManagement {
-	js := &javascript{
-		shouldFix: shouldFix,
+func NewJSLanguage(pattern string) types.NodeManagement {
+	return &javascript{
 		data: types.LanguageData{
 			Language: tree.NewLanguage(jsGrammar.Language()),
 			Queries:  buildJSQuery(pattern),
 		},
 	}
-	js.fileModifier = analysis.NewFileModifier(js)
-	return js
 }
 
-func (js javascript) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (js javascript) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		// Set the initial feedback
-		nodeInfo.SetVariableFeedback(string(code[node.Node.StartByte():node.Node.EndByte()]), domain.Point(node.Node.StartPosition()))
-		js.fileModifier.ModifyVariableName(code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), js.shouldFix)
+		js.variableManagement(node, nodeInfo, code)
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
 	}
 	nodeInfo.Complexity++
+}
+
+func (js javascript) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
+	// Set the initial feedback
+	functionData.SetVariableFeedback(
+		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
+		domain.Point(varNode.Node.StartPosition()),
+	)
 }
 
 func buildJSQuery(pattern string) string {

@@ -1,7 +1,6 @@
 package languages
 
 import (
-	"CLI_App/cmd/adapters/analysis"
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 	"fmt"
@@ -12,35 +11,37 @@ import (
 
 // python: struct with LanguageInformation embedded
 type python struct {
-	shouldFix    bool
-	fileModifier analysis.FileModifier
-	data         types.LanguageData
+	data types.LanguageData
 }
 
-func NewPythonLanguage(pattern string, shouldFix bool) types.NodeManagement {
-	p := &python{
-		shouldFix: shouldFix,
+func NewPythonLanguage(pattern string) types.NodeManagement {
+	return &python{
 		data: types.LanguageData{
 			Language: tree.NewLanguage(pyGrammar.Language()),
 			Queries:  buildPythonQuery(pattern),
 		},
 	}
-	p.fileModifier = analysis.NewFileModifier(p)
-	return p
 }
 
 // ManageNode - > Function to implement the NodeManagement interface
-func (p python) ManageNode(captureNames []string, code []byte, filepath string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (p python) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		// Set the initial feedback
-		nodeInfo.SetVariableFeedback(string(code[node.Node.StartByte():node.Node.EndByte()]), domain.Point(node.Node.StartPosition()))
-		p.fileModifier.ModifyVariableName(code, filepath, string(code[node.Node.StartByte():node.Node.EndByte()]), p.shouldFix)
+		// Manage the variable whenever it's detected
+		p.variableManagement(node, nodeInfo, code)
 		return
 	case node.Node.GrammarName() == "boolean_operator" && node.Node.Parent().GrammarName() == "assignment":
 		return
 	}
 	nodeInfo.Complexity++
+}
+
+func (p python) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
+	// Set the initial feedback
+	functionData.SetVariableFeedback(
+		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
+		domain.Point(varNode.Node.StartPosition()),
+	)
 }
 
 func buildPythonQuery(pattern string) string {
@@ -71,6 +72,6 @@ func (p python) GetLanguageData() types.LanguageData {
 	return p.data
 }
 
-func (p python) GetVarAppearancesQuery(name string) string {
-	return fmt.Sprintf("((identifier) @variable.name (#match? @variable.name \"^%s$\"))", name)
+func (p python) GetVarAppearancesQuery(pattern string) string {
+	return fmt.Sprintf("((identifier) @variable.name (#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar)
 }

@@ -5,11 +5,12 @@ import (
 	"CLI_App/cmd/domain"
 	"fmt"
 	"os"
+	"strings"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 )
 
-func GetAST(code []byte, language *tree.Language) *tree.Tree {
+func GetAST(code *[]string, language *tree.Language) *tree.Tree {
 	// Create a parser for the code
 	parser := tree.NewParser()
 	defer parser.Close()
@@ -20,13 +21,13 @@ func GetAST(code []byte, language *tree.Language) *tree.Tree {
 		os.Exit(1)
 	}
 	// Parse the source code with the configured parser
-	treeParser := parser.Parse(code, nil)
+	treeParser := parser.Parse([]byte(strings.Join(*code, "\n")), nil)
 
 	// Get the root (program node) node from the parser.
 	return treeParser
 }
 
-func GetCapturesByQueries(language *tree.Language, queries string, code []byte, root *tree.Node) (*tree.Query,
+func GetCapturesByQueries(language *tree.Language, queries string, code *[]string, root *tree.Node) (*tree.Query,
 	*tree.QueryCursor, tree.QueryMatches) {
 	// Create a query to extract the data we need
 	query, err := tree.NewQuery(language, queries)
@@ -39,11 +40,11 @@ func GetCapturesByQueries(language *tree.Language, queries string, code []byte, 
 	cursor := tree.NewQueryCursor()
 
 	// Execute the query and generate the captures
-	return query, cursor, cursor.Matches(query, root, code)
+	return query, cursor, cursor.Matches(query, root, []byte(strings.Join(*code, "\n")))
 }
 
 // CyclicalComplexity Function that calculates the cyclical complexity of the code. Useful for the user feedback.
-func CyclicalComplexity(languageInfo types.NodeManagement, code []byte, filepath string) []*domain.FunctionData {
+func CyclicalComplexity(languageInfo types.NodeManagement, code *[]string) []*domain.FunctionData {
 	// Get our ast bases in our code and grammar
 	ast := GetAST(code, languageInfo.GetLanguageData().Language)
 	defer ast.Close()
@@ -74,7 +75,7 @@ func CyclicalComplexity(languageInfo types.NodeManagement, code []byte, filepath
 			Stack = append(Stack, &domain.FunctionData{Complexity: 1})
 			// Add the initial data to the object reference in the stack
 			Stack[len(Stack)-1].AddInitialData(
-				string(code[copyOf.Captures[1].Node.StartByte():copyOf.Captures[1].Node.EndByte()]),
+				(*code)[copyOf.Captures[1].Node.StartPosition().Row][copyOf.Captures[1].Node.StartPosition().Column:copyOf.Captures[1].Node.EndPosition().Column],
 				int(copyOf.Captures[2].Node.NamedChildCount()),
 				copyOf.Captures[3].Node.StartByte(), copyOf.Captures[3].Node.EndByte(),
 				copyOf.Captures[3].Node.EndPosition().Row-copyOf.Captures[2].Node.StartPosition().Row,
@@ -83,12 +84,12 @@ func CyclicalComplexity(languageInfo types.NodeManagement, code []byte, filepath
 
 		// If there´s code without a function (JS, Python) before a function definition, we count it as main.
 		case len(Stack) <= 0:
-			languageInfo.ManageNode(query.CaptureNames(), code, filepath, copyOf.Captures[0], Functions[0])
+			languageInfo.ManageNode(query.CaptureNames(), code, copyOf.Captures[0], Functions[0])
 
 		// Validate node ranges with the function body. This is the logic for functions inside functions or the main one
 		case Stack[len(Stack)-1].IsTargetInRange(copyOf.Captures[0].Node.StartByte(), copyOf.Captures[0].Node.EndByte()):
 			// + 1 in complexity in the function.
-			languageInfo.ManageNode(query.CaptureNames(), code, filepath, copyOf.Captures[0], Stack[len(Stack)-1])
+			languageInfo.ManageNode(query.CaptureNames(), code, copyOf.Captures[0], Stack[len(Stack)-1])
 
 		// The code only gets here when there's a line out of the scope of a function
 		// Remove the most recent element from the stack and add it to the Functions list
@@ -101,7 +102,7 @@ func CyclicalComplexity(languageInfo types.NodeManagement, code []byte, filepath
 				// If the stack only has the current function, we assign the +1 to the main (default).
 				if len(Stack) <= 1 {
 					isMain = true
-					languageInfo.ManageNode(query.CaptureNames(), code, filepath, copyOf.Captures[0], Functions[0])
+					languageInfo.ManageNode(query.CaptureNames(), code, copyOf.Captures[0], Functions[0])
 					break
 				}
 				Functions = append(Functions, Stack[len(Stack)-1])
@@ -109,7 +110,7 @@ func CyclicalComplexity(languageInfo types.NodeManagement, code []byte, filepath
 			}
 			// At the end, in the verified node, we sum +1 to the complexity.
 			if !isMain {
-				languageInfo.ManageNode(query.CaptureNames(), code, filepath, copyOf.Captures[0], Stack[len(Stack)-1])
+				languageInfo.ManageNode(query.CaptureNames(), code, copyOf.Captures[0], Stack[len(Stack)-1])
 			}
 		}
 	}

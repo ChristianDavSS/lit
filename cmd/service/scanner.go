@@ -36,8 +36,13 @@ func (s *ScanService) ExecuteLOC() {
 	s.traverseFiles(s.loc, domain.LocValidScriptPattern)
 }
 
+// FixFile fixes the name of certain variables
+func (s *ScanService) FixFile() {
+	s.traverseFiles(s.fixFile, domain.ScanValidScriptPattern)
+}
+
 // Internal functions to analyze code
-func (s *ScanService) scanFile(filename string, code []byte) {
+func (s *ScanService) scanFile(filename string, code *[]string) {
 	defer s.wg.Done()
 	if code == nil {
 		return
@@ -51,18 +56,22 @@ func (s *ScanService) scanFile(filename string, code []byte) {
 	}
 }
 
-func (s *ScanService) loc(filename string, code []byte) {
+func (s *ScanService) loc(filename string, code *[]string) {
 	defer s.wg.Done()
-	// Split the code into lines
-	lines := strings.Split(string(code), "\n")
 	// Sum up the stored value with the total lines found in that script.
 	s.mu.Lock()
-	s.languagesMap[filepath.Ext(filename)[1:]] += len(lines)
+	s.languagesMap[filepath.Ext(filename)[1:]] += len(*code)
 	s.mu.Unlock()
 }
 
+func (s *ScanService) fixFile(filename string, code *[]string) {
+	defer s.wg.Done()
+	s.analyzer.FixFile(filename, code)
+	WriteOnFile(filename, []byte(strings.Join(*code, "\n")))
+}
+
 // Navigate through the file system with a DFS algorithm.
-func (s *ScanService) traverseFiles(fileFunction func(filename string, code []byte), validScriptPattern string) {
+func (s *ScanService) traverseFiles(fileFunction func(filename string, code *[]string), validScriptPattern string) {
 	stack := []domain.Directory{{"", GetDirEntries(GetWorkingDirectory())}}
 	for len(stack) > 0 {
 		// Extract the last element from the stack
@@ -84,9 +93,13 @@ func (s *ScanService) traverseFiles(fileFunction func(filename string, code []by
 				if r, _ := regexp.Match(validScriptPattern, []byte(v.Name())); !r {
 					continue
 				}
-				file := ReadFile(files.DirName + v.Name())
+				// Create the file path
+				path := files.DirName + v.Name()
+
+				file := strings.Split(string(ReadFile(path)), "\n")
+
 				s.wg.Add(1)
-				go fileFunction(files.DirName+v.Name(), file)
+				go fileFunction(path, &file)
 			}
 		}
 	}

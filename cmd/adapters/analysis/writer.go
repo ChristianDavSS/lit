@@ -3,9 +3,6 @@ package analysis
 import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/adapters/config"
-	"CLI_App/cmd/domain"
-	"fmt"
-	"os"
 	"strings"
 )
 
@@ -15,43 +12,30 @@ import (
 
 // FileModifier is an adapter for modifying data into the code script. This way, we can manage the file modification safely
 type FileModifier struct {
-	management types.NodeManagement
+	management    types.NodeManagement
+	activePattern string
 }
 
-func NewFileModifier(management types.NodeManagement) FileModifier {
+func NewFileModifier(management types.NodeManagement, activePattern string) FileModifier {
 	return FileModifier{
-		management: management,
+		management:    management,
+		activePattern: activePattern,
 	}
 }
 
 // ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
 // Takes the initial variable name and converts it
 // Only converts from one convention to another (safety conditions)
-func (f FileModifier) ModifyVariableName(code []byte, filePath, varName string, shouldFix bool) {
-	// If the variable isn't  camelCase, CamelCase or snake_case, we don't modify it (for code safety)
-	if !domain.RegexMatch(domain.CamelCase+"|"+domain.SnakeCase, varName) || !shouldFix {
-		return
-	}
-
-	// get the indexes where there's a separator
-	upperIndexes := getSeparatorIndexes(varName)
-	// with the indexes, separate the line into valid tokens
-	tokens := getTokens(upperIndexes, varName)
-	// get the new variable name (according to the current naming conventions selected)
-	newVarName := refactorVarName(tokens)
-
+func (f FileModifier) ModifyVariableName(code *[]string) {
 	// get the query, cursor and captures (applying the query to fetch them)
 	root := GetAST(code, f.management.GetLanguageData().Language)
 	defer root.Close()
 	query, cursor, captures := GetCapturesByQueries(f.management.GetLanguageData().Language,
-		f.management.GetVarAppearancesQuery(varName), code, root.RootNode())
+		f.management.GetVarAppearancesQuery(f.activePattern), code, root.RootNode())
 	defer query.Close()
 	defer cursor.Close()
 
-	// cache of the sum of the difference between lengths of the variables
-	diff := make(map[uint]uint)
-	// slice the code into lines (just as the script
-	slicedCode := strings.Split(string(code), "\n")
+	localCache := make(map[uint]int)
 
 	// loop through the node captures
 	for {
@@ -60,79 +44,44 @@ func (f FileModifier) ModifyVariableName(code []byte, filePath, varName string, 
 		if match == nil {
 			break
 		}
+		copyOf := *match
 		// get the node from the captures (just one capture per match)
-		node := match.Captures[0].Node
-		// get the current line of code (the one that'll be modified
-		str := slicedCode[node.StartPosition().Row]
-		// check if there's a value of this row in the cache
-		_, ok := diff[node.StartPosition().Row]
-		// if there's not, we initialize it to 0
+		node := copyOf.Captures[0].Node
+		value, ok := localCache[node.StartPosition().Row]
 		if !ok {
-			diff[node.StartPosition().Row] = 0
+			value = 0
 		}
-		// get the value from the cache of that position (at this point, there key will always have a value)
-		value := diff[node.StartPosition().Row]
+		newName := refactorVarName(getTokens((*code)[node.StartPosition().Row][int(node.StartPosition().Column)+value : int(node.EndPosition().Column)+value]))
 
-		// modify the line of code using the cache and slicing
-		slicedCode[node.StartPosition().Row] = str[:node.StartPosition().Column+value] + newVarName + str[node.EndPosition().Column+value:]
+		row := (*code)[node.StartPosition().Row]
 
-		// update the value of the row, adding up the difference of lengths
-		diff[node.StartPosition().Row] += uint(len(newVarName) - len(varName))
-	}
+		(*code)[node.StartPosition().Row] = row[:int(node.StartPosition().Column)+value] + newName + row[int(node.EndPosition().Column)+value:]
 
-	// Write the modified code into the file (with the new variable names where they belong)
-	err := os.WriteFile(filePath, []byte(strings.Join(slicedCode, "\n")), 0644)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error trying to write the variable name into the file...")
-		os.Exit(1)
+		localCache[node.StartPosition().Row] += len(newName) - int(node.EndPosition().Column-node.StartPosition().Column)
 	}
 }
 
 // ---- Writing on files and renaming ----
 // getSeparatorIndexes: get the indexes on the line of code where there's a separator (uppercase or underscore)
-func getSeparatorIndexes(line string) []int16 {
+func getTokens(line string) []string {
 	// slice to save up the indexes
-	var indexes []int16
+	var tokens []string
+	var i int
 
 	// iterate through the line of code
-	for i, ch := range line {
-		// if the character is an uppercase letter or an underscore, we save the index of that
-		if ch >= 65 && ch <= 90 && i > 0 || ch == 95 {
-			indexes = append(indexes, int16(i))
+	for j, ch := range line {
+		if ch == 95 || ch >= 65 && ch <= 90 {
+			tokens = append(tokens, strings.ToLower(line[i:j]))
+			if ch == 95 {
+				i = j + 1
+			} else {
+				i = j
+			}
 		}
+		j++
 	}
 
-	return indexes
-}
-
-// getTokens: gets the tokens (valid substrings) from a line of code with a determined naming convention
-func getTokens(upperIndexes []int16, line string) []string {
-	// slice to save up every cleaned token
-	var tokens []string
-	// variable to keep track of the previous index of the list
-	var prevIdx int16
-
-	// traverse our indexes
-	for i, currIdx := range upperIndexes {
-		// variable that is just 0 or 1 depending on the previous index value in the line of code.
-		var sum int16
-		// if the line of code in the position of the previous index is an underscore, we sum it up to one
-		if line[prevIdx] == 95 {
-			sum++
-		}
-		// we add up the clean token into the slice of tokens
-		tokens = append(tokens, strings.ToLower(line[prevIdx+sum:currIdx]))
-		// set up the previous token
-		prevIdx = currIdx
-
-		// if it's the last iteration, we add the values without a limit
-		if i >= len(upperIndexes)-1 {
-			tokens = append(tokens, strings.ToLower(line[prevIdx+sum:]))
-		}
-	}
-
-	// return the clean slice of tokens
-	return tokens
+	return append(tokens, strings.ToLower(line[i:]))
 }
 
 // refactorVarName: with the strings split in tokens, returns a []byte of the new line of code.
@@ -156,6 +105,9 @@ func refactorVarName(tokens []string) string {
 
 // function with the logics for the camelCase and CamelCase conversions
 func camelCases(target *string, tokens []string) {
+	if len(tokens) < 0 {
+		return
+	}
 	for _, token := range tokens {
 		*target += string(token[0]-32) + token[1:]
 	}
