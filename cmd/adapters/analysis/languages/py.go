@@ -73,5 +73,5 @@ func (p python) GetLanguageData() types.LanguageData {
 }
 
 func (p python) GetVarAppearancesQuery(pattern string) string {
-	return fmt.Sprintf("((identifier) @variable.name (#not-match? @variable.name \"^%s$\"))", pattern)
+	return fmt.Sprintf("((identifier) @variable.name (#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar)
 }

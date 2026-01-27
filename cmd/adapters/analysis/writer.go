@@ -105,6 +105,9 @@ func refactorVarName(tokens []string) string {
 
 // function with the logics for the camelCase and CamelCase conversions
 func camelCases(target *string, tokens []string) {
+	if len(tokens) < 0 {
+		return
+	}
 	for _, token := range tokens {
 		*target += string(token[0]-32) + token[1:]
 	}
