@@ -35,10 +35,7 @@ func (f FileModifier) ModifyVariableName(code *[]string) {
 	defer query.Close()
 	defer cursor.Close()
 
-	localCache := map[uint]struct {
-		names   []string
-		lastIdx uint
-	}{}
+	localCache := make(map[uint]int)
 
 	// loop through the node captures
 	for {
@@ -50,27 +47,17 @@ func (f FileModifier) ModifyVariableName(code *[]string) {
 		copyOf := *match
 		// get the node from the captures (just one capture per match)
 		node := copyOf.Captures[0].Node
-		newName := refactorVarName(getTokens((*code)[node.StartPosition().Row][node.StartPosition().Column:node.EndPosition().Column]))
-
 		value, ok := localCache[node.StartPosition().Row]
 		if !ok {
-			value = struct {
-				names   []string
-				lastIdx uint
-			}{
-				names:   make([]string, 0),
-				lastIdx: 0,
-			}
-			localCache[node.StartPosition().Row] = value
+			value = 0
 		}
-		value.names = append(value.names, newName)
-		value.lastIdx = node.EndPosition().Column
+		newName := refactorVarName(getTokens((*code)[node.StartPosition().Row][int(node.StartPosition().Column)+value : int(node.EndPosition().Column)+value]))
 
-		localCache[node.StartPosition().Row] = value
-	}
+		row := (*code)[node.StartPosition().Row]
 
-	for key, value := range localCache {
-		(*code)[key] = strings.Join(value.names, ", ") + (*code)[key][value.lastIdx:]
+		(*code)[node.StartPosition().Row] = row[:int(node.StartPosition().Column)+value] + newName + row[int(node.EndPosition().Column)+value:]
+
+		localCache[node.StartPosition().Row] += len(newName) - int(node.EndPosition().Column-node.StartPosition().Column)
 	}
 }
 
