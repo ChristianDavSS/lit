@@ -1,7 +1,6 @@
 package languages
 
 import (
-	"CLI_App/cmd/adapters/analysis"
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 
@@ -11,21 +10,16 @@ import (
 
 // javascript interface with LanguageData embedded
 type javascript struct {
-	shouldFix    bool
-	fileModifier analysis.FileModifier
-	data         types.LanguageData
+	data types.LanguageData
 }
 
-func NewJSLanguage(pattern string, shouldFix bool) types.NodeManagement {
-	js := &javascript{
-		shouldFix: shouldFix,
+func NewJSLanguage(pattern string) types.NodeManagement {
+	return &javascript{
 		data: types.LanguageData{
 			Language: tree.NewLanguage(jsGrammar.Language()),
 			Queries:  buildJSQuery(pattern),
 		},
 	}
-	js.fileModifier = analysis.NewFileModifier(js)
-	return js
 }
 
 func (js javascript) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
@@ -44,11 +38,6 @@ func (js javascript) variableManagement(varNode tree.QueryCapture, functionData 
 	functionData.SetVariableFeedback(
 		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
 		domain.Point(varNode.Node.StartPosition()),
-	)
-	js.fileModifier.ModifyVariableName(
-		code,
-		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
-		js.shouldFix,
 	)
 }
 

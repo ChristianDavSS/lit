@@ -1,7 +1,6 @@
 package languages
 
 import (
-	"CLI_App/cmd/adapters/analysis"
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 	"fmt"
@@ -12,21 +11,16 @@ import (
 
 // python: struct with LanguageInformation embedded
 type python struct {
-	shouldFix    bool
-	fileModifier analysis.FileModifier
-	data         types.LanguageData
+	data types.LanguageData
 }
 
-func NewPythonLanguage(pattern string, shouldFix bool) types.NodeManagement {
-	p := &python{
-		shouldFix: shouldFix,
+func NewPythonLanguage(pattern string) types.NodeManagement {
+	return &python{
 		data: types.LanguageData{
 			Language: tree.NewLanguage(pyGrammar.Language()),
 			Queries:  buildPythonQuery(pattern),
 		},
 	}
-	p.fileModifier = analysis.NewFileModifier(p)
-	return p
 }
 
 // ManageNode - > Function to implement the NodeManagement interface
@@ -47,11 +41,6 @@ func (p python) variableManagement(varNode tree.QueryCapture, functionData *doma
 	functionData.SetVariableFeedback(
 		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
 		domain.Point(varNode.Node.StartPosition()),
-	)
-	p.fileModifier.ModifyVariableName(
-		code,
-		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
-		p.shouldFix,
 	)
 }
 
@@ -83,6 +72,6 @@ func (p python) GetLanguageData() types.LanguageData {
 	return p.data
 }
 
-func (p python) GetVarAppearancesQuery(name string) string {
-	return fmt.Sprintf("((identifier) @variable.name (#match? @variable.name \"^%s$\"))", name)
+func (p python) GetVarAppearancesQuery(pattern string) string {
+	return fmt.Sprintf("((identifier) @variable.name (#not-match? @variable.name \"^%s$\"))", pattern)
 }

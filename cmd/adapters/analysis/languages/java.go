@@ -1,7 +1,6 @@
 package languages
 
 import (
-	"CLI_App/cmd/adapters/analysis"
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
 
@@ -10,21 +9,16 @@ import (
 )
 
 type java struct {
-	shouldFix    bool
-	fileModifier analysis.FileModifier
-	data         types.LanguageData
+	data types.LanguageData
 }
 
-func NewJavaLanguage(pattern string, shouldFix bool) types.NodeManagement {
-	j := &java{
-		shouldFix: shouldFix,
+func NewJavaLanguage(pattern string) types.NodeManagement {
+	return &java{
 		data: types.LanguageData{
 			Language: tree.NewLanguage(javaGrammar.Language()),
 			Queries:  buildJavaQuery(pattern),
 		},
 	}
-	j.fileModifier = analysis.NewFileModifier(j)
-	return j
 }
 
 func (j java) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
@@ -47,11 +41,6 @@ func (j java) variableManagement(varNode tree.QueryCapture, functionData *domain
 	functionData.SetVariableFeedback(
 		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
 		domain.Point(varNode.Node.StartPosition()),
-	)
-	j.fileModifier.ModifyVariableName(
-		code,
-		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
-		j.shouldFix,
 	)
 }
 

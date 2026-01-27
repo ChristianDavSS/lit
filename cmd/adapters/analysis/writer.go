@@ -3,7 +3,6 @@ package analysis
 import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/adapters/config"
-	"CLI_App/cmd/domain"
 	"strings"
 )
 
@@ -13,39 +12,33 @@ import (
 
 // FileModifier is an adapter for modifying data into the code script. This way, we can manage the file modification safely
 type FileModifier struct {
-	management types.NodeManagement
+	management    types.NodeManagement
+	activePattern string
 }
 
-func NewFileModifier(management types.NodeManagement) FileModifier {
+func NewFileModifier(management types.NodeManagement, activePattern string) FileModifier {
 	return FileModifier{
-		management: management,
+		management:    management,
+		activePattern: activePattern,
 	}
 }
 
 // ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
 // Takes the initial variable name and converts it
 // Only converts from one convention to another (safety conditions)
-func (f FileModifier) ModifyVariableName(code *[]string, varName string, shouldFix bool) {
-	// If the variable isn't  camelCase, CamelCase or snake_case, we don't modify it (for code safety)
-	if !domain.RegexMatch(domain.CamelCase+"|"+domain.SnakeCase, varName) || !shouldFix {
-		return
-	}
-
-	// with the indexes, separate the line into valid tokens
-	tokens := getTokens(varName)
-	// get the new variable name (according to the current naming conventions selected)
-	newVarName := refactorVarName(tokens)
-
+func (f FileModifier) ModifyVariableName(code *[]string) {
 	// get the query, cursor and captures (applying the query to fetch them)
 	root := GetAST(code, f.management.GetLanguageData().Language)
 	defer root.Close()
 	query, cursor, captures := GetCapturesByQueries(f.management.GetLanguageData().Language,
-		f.management.GetVarAppearancesQuery(varName), code, root.RootNode())
+		f.management.GetVarAppearancesQuery(f.activePattern), code, root.RootNode())
 	defer query.Close()
 	defer cursor.Close()
 
-	// cache of the sum of the difference between lengths of the variables
-	diff := make(map[uint]uint)
+	localCache := map[uint]struct {
+		names   []string
+		lastIdx uint
+	}{}
 
 	// loop through the node captures
 	for {
@@ -54,24 +47,30 @@ func (f FileModifier) ModifyVariableName(code *[]string, varName string, shouldF
 		if match == nil {
 			break
 		}
+		copyOf := *match
 		// get the node from the captures (just one capture per match)
-		node := match.Captures[0].Node
-		// get the current line of code (the one that'll be modified
-		str := (*code)[node.StartPosition().Row]
-		// check if there's a value of this row in the cache
-		_, ok := diff[node.StartPosition().Row]
-		// if there's not, we initialize it to 0
+		node := copyOf.Captures[0].Node
+		newName := refactorVarName(getTokens((*code)[node.StartPosition().Row][node.StartPosition().Column:node.EndPosition().Column]))
+
+		value, ok := localCache[node.StartPosition().Row]
 		if !ok {
-			diff[node.StartPosition().Row] = 0
+			value = struct {
+				names   []string
+				lastIdx uint
+			}{
+				names:   make([]string, 0),
+				lastIdx: 0,
+			}
+			localCache[node.StartPosition().Row] = value
 		}
-		// get the value from the cache of that position (at this point, there key will always have a value)
-		value := diff[node.StartPosition().Row]
+		value.names = append(value.names, newName)
+		value.lastIdx = node.EndPosition().Column
 
-		// modify the line of code using the cache and slicing
-		(*code)[node.StartPosition().Row] = str[:node.StartPosition().Column+value] + newVarName + str[node.EndPosition().Column+value:]
+		localCache[node.StartPosition().Row] = value
+	}
 
-		// update the value of the row, adding up the difference of lengths
-		diff[node.StartPosition().Row] += uint(len(newVarName) - len(varName))
+	for key, value := range localCache {
+		(*code)[key] = strings.Join(value.names, ", ") + (*code)[key][value.lastIdx:]
 	}
 }
 

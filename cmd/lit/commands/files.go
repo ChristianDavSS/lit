@@ -2,7 +2,6 @@ package commands
 
 import (
 	"CLI_App/cmd/adapters/analysis/languages"
-	"CLI_App/cmd/adapters/cache"
 	"CLI_App/cmd/adapters/config"
 	"CLI_App/cmd/domain"
 	"CLI_App/cmd/service"
@@ -20,18 +19,19 @@ func Files() *cobra.Command {
 
 			jsonAdapter := config.NewJSONAdapter()
 			scanner := service.NewScannerService(
-				languages.NewFileAnalyzer(fix, domain.Conventions[jsonAdapter.GetConfig().NamingConventionIndex]),
-				cache.NewCache[string, []string](),
+				languages.NewFileAnalyzer(domain.Conventions[jsonAdapter.GetConfig().NamingConventionIndex]),
 			)
 
-			if loc {
+			switch {
+			case loc:
 				scanner.ExecuteLOC()
 				scanner.PrintLOCResults()
-				return
+			case fix:
+				scanner.FixFile()
+			default:
+				scanner.ScanFiles()
+				scanner.PrintScanningResults()
 			}
-
-			scanner.ScanFiles()
-			scanner.PrintScanningResults()
 		},
 	}
 	command.Flags().Bool("loc", false, "Retrieves the languages used with statistics")

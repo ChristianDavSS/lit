@@ -8,13 +8,11 @@ import (
 )
 
 type FileAnalyzer struct {
-	shouldFix     bool
 	activePattern string
 }
 
-func NewFileAnalyzer(shouldFix bool, activePattern string) *FileAnalyzer {
+func NewFileAnalyzer(activePattern string) *FileAnalyzer {
 	return &FileAnalyzer{
-		shouldFix:     shouldFix,
 		activePattern: activePattern,
 	}
 }
@@ -22,24 +20,10 @@ func NewFileAnalyzer(shouldFix bool, activePattern string) *FileAnalyzer {
 // AnalyzeFile analyses the file via DFS (is executed in the scanner)
 func (analyzer *FileAnalyzer) AnalyzeFile(filePath string, code *[]string) []*domain.FunctionData {
 	// Set the variable to save up the language of the current script
-	var activeLanguage types.NodeManagement
-
-	// Save the language for the complexity
-	switch filepath.Ext(filePath)[1:] {
-	case "js", "jsx":
-		activeLanguage = NewJSLanguage(analyzer.activePattern, analyzer.shouldFix)
-	case "go":
-		activeLanguage = NewGolangLanguage(analyzer.activePattern, analyzer.shouldFix)
-	case "java":
-		activeLanguage = NewJavaLanguage(analyzer.activePattern, analyzer.shouldFix)
-	case "py":
-		activeLanguage = NewPythonLanguage(analyzer.activePattern, analyzer.shouldFix)
-	default:
-		return nil
-	}
+	activeLanguage := analyzer.getLanguage(filepath.Ext(filePath)[1:])
 
 	// Calculate the cyclical complexity and get the functions returned
-	functions := analysis.CyclicalComplexity(activeLanguage, code, filePath)
+	functions := analysis.CyclicalComplexity(activeLanguage, code)
 
 	i := 0
 	for i < len(functions) {
@@ -55,4 +39,26 @@ func (analyzer *FileAnalyzer) AnalyzeFile(filePath string, code *[]string) []*do
 	}
 
 	return functions
+}
+
+func (analyzer *FileAnalyzer) FixFile(filePath string, code *[]string) {
+	activeLanguage := analyzer.getLanguage(filepath.Ext(filePath)[1:])
+	writer := analysis.NewFileModifier(activeLanguage, analyzer.activePattern)
+	writer.ModifyVariableName(code)
+}
+
+func (analyzer *FileAnalyzer) getLanguage(ext string) types.NodeManagement {
+	// Save the language for the complexity
+	switch ext {
+	case "js", "jsx":
+		return NewJSLanguage(analyzer.activePattern)
+	case "go":
+		return NewGolangLanguage(analyzer.activePattern)
+	case "java":
+		return NewJavaLanguage(analyzer.activePattern)
+	case "py":
+		return NewPythonLanguage(analyzer.activePattern)
+	default:
+		return nil
+	}
 }

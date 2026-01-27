@@ -2,6 +2,7 @@ package domain
 
 type Analyzer interface {
 	AnalyzeFile(filePath string, code *[]string) []*FunctionData
+	FixFile(filePath string, code *[]string)
 }
 
 type ConfigAdapter interface {

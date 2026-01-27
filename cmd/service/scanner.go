@@ -14,15 +14,13 @@ type ScanService struct {
 	wg                 sync.WaitGroup
 	mu                 sync.Mutex
 	analyzer           domain.Analyzer
-	cache              domain.CacheStore[string, []string]
 	dangerousFunctions map[string][]*domain.FunctionData
 	languagesMap       map[string]int
 }
 
-func NewScannerService(analyzer domain.Analyzer, cache domain.CacheStore[string, []string]) ScanService {
+func NewScannerService(analyzer domain.Analyzer) ScanService {
 	return ScanService{
 		analyzer:           analyzer,
-		cache:              cache,
 		dangerousFunctions: make(map[string][]*domain.FunctionData),
 		languagesMap:       make(map[string]int),
 	}
@@ -38,6 +36,11 @@ func (s *ScanService) ExecuteLOC() {
 	s.traverseFiles(s.loc, domain.LocValidScriptPattern)
 }
 
+// FixFile fixes the name of certain variables
+func (s *ScanService) FixFile() {
+	s.traverseFiles(s.fixFile, domain.ScanValidScriptPattern)
+}
+
 // Internal functions to analyze code
 func (s *ScanService) scanFile(filename string, code *[]string) {
 	defer s.wg.Done()
@@ -51,10 +54,6 @@ func (s *ScanService) scanFile(filename string, code *[]string) {
 		s.dangerousFunctions[filename] = functions
 		s.mu.Unlock()
 	}
-	// Modify the cache
-	s.cache.SetCache(filename, *code)
-
-	WriteOnFile(filename, []byte(strings.Join(*code, "\n")))
 }
 
 func (s *ScanService) loc(filename string, code *[]string) {
@@ -63,6 +62,12 @@ func (s *ScanService) loc(filename string, code *[]string) {
 	s.mu.Lock()
 	s.languagesMap[filepath.Ext(filename)[1:]] += len(*code)
 	s.mu.Unlock()
+}
+
+func (s *ScanService) fixFile(filename string, code *[]string) {
+	defer s.wg.Done()
+	s.analyzer.FixFile(filename, code)
+	WriteOnFile(filename, []byte(strings.Join(*code, "\n")))
 }
 
 // Navigate through the file system with a DFS algorithm.
@@ -91,11 +96,7 @@ func (s *ScanService) traverseFiles(fileFunction func(filename string, code *[]s
 				// Create the file path
 				path := files.DirName + v.Name()
 
-				file, ok := s.cache.GetCache(path)
-				if !ok {
-					file = strings.Split(string(ReadFile(path)), "\n")
-					s.cache.SetCache(path, file)
-				}
+				file := strings.Split(string(ReadFile(path)), "\n")
 
 				s.wg.Add(1)
 				go fileFunction(path, &file)
