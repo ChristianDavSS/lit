@@ -30,6 +30,7 @@ func (analyzer *FileAnalyzer) AnalyzeFile(filePath string, code *[]string) []*do
 		if functions[i].TotalParams < domain.Messages["parameters"][0].Value &&
 			int(functions[i].Size) < domain.Messages["size"][0].Value &&
 			functions[i].Complexity < domain.Messages["complexity"][0].Value &&
+			functions[i].InvalidNames < 1 &&
 			functions[i].Feedback == "" {
 			functions = append(functions[:i], functions[i+1:]...)
 			continue
@@ -41,10 +42,10 @@ func (analyzer *FileAnalyzer) AnalyzeFile(filePath string, code *[]string) []*do
 	return functions
 }
 
-func (analyzer *FileAnalyzer) FixFile(filePath string, code *[]string) {
+func (analyzer *FileAnalyzer) FixFile(filePath string, code *[]string) int {
 	activeLanguage := analyzer.getLanguage(filepath.Ext(filePath)[1:])
 	writer := analysis.NewFileModifier(activeLanguage, analyzer.activePattern)
-	writer.ModifyVariableName(code)
+	return writer.ModifyVariableName(code)
 }
 
 func (analyzer *FileAnalyzer) getLanguage(ext string) types.NodeManagement {

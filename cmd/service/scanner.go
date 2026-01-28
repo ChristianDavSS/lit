@@ -16,6 +16,7 @@ type ScanService struct {
 	analyzer           domain.Analyzer
 	dangerousFunctions map[string][]*domain.FunctionData
 	languagesMap       map[string]int
+	totalNamesChanged  int
 }
 
 func NewScannerService(analyzer domain.Analyzer) ScanService {
@@ -66,7 +67,7 @@ func (s *ScanService) loc(filename string, code *[]string) {
 
 func (s *ScanService) fixFile(filename string, code *[]string) {
 	defer s.wg.Done()
-	s.analyzer.FixFile(filename, code)
+	s.totalNamesChanged += s.analyzer.FixFile(filename, code)
 	WriteOnFile(filename, []byte(strings.Join(*code, "\n")))
 }
 
@@ -134,7 +135,12 @@ func (s *ScanService) PrintScanningResults() {
 		for _, item := range value {
 			fmt.Printf(" * Function %s (at %d:%d)\n", item.Name, item.StartPosition.Row, item.StartPosition.Column)
 			fmt.Printf("   Parameters: %d\n   Total lines of code: %d\n", item.TotalParams, item.Size)
+			fmt.Printf("   Found %d variables with the wrong naming convention.\n", item.InvalidNames)
 			fmt.Println(item.Feedback)
 		}
 	}
+}
+
+func (s *ScanService) PrintFixResults() {
+	fmt.Printf("%d names were modified successfully.\n", s.totalNamesChanged)
 }

@@ -22,12 +22,12 @@ func NewJavaLanguage(pattern string) types.NodeManagement {
 	}
 }
 
-func (j java) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (j java) ManageNode(captureNames []string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		j.variableManagement(node, nodeInfo, code)
+		nodeInfo.UpdateInvalidNames()
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
@@ -35,14 +35,6 @@ func (j java) ManageNode(captureNames []string, code *[]string, node tree.QueryC
 		nodeInfo.Complexity++
 	}
 	nodeInfo.Complexity++
-}
-
-func (j java) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
-	// Set the initial feedback
-	functionData.SetVariableFeedback(
-		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
-		domain.Point(varNode.Node.StartPosition()),
-	)
 }
 
 func buildJavaQuery(pattern string) string {

@@ -23,23 +23,15 @@ func NewJSLanguage(pattern string) types.NodeManagement {
 	}
 }
 
-func (js javascript) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (js javascript) ManageNode(captureNames []string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		js.variableManagement(node, nodeInfo, code)
+		nodeInfo.UpdateInvalidNames()
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
 	}
 	nodeInfo.Complexity++
-}
-
-func (js javascript) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
-	// Set the initial feedback
-	functionData.SetVariableFeedback(
-		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
-		domain.Point(varNode.Node.StartPosition()),
-	)
 }
 
 func buildJSQuery(pattern string) string {

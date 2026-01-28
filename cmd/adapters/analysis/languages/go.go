@@ -22,12 +22,12 @@ func NewGolangLanguage(pattern string) types.NodeManagement {
 	}
 }
 
-func (g golang) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (g golang) ManageNode(captureNames []string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		g.variableManagement(node, nodeInfo, code)
+		nodeInfo.UpdateInvalidNames()
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "expression_list":
 		return
@@ -35,14 +35,6 @@ func (g golang) ManageNode(captureNames []string, code *[]string, node tree.Quer
 		nodeInfo.Complexity++
 	}
 	nodeInfo.Complexity++
-}
-
-func (g golang) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
-	// Set the initial feedback
-	functionData.SetVariableFeedback(
-		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
-		domain.Point(varNode.Node.StartPosition()),
-	)
 }
 
 func buildGolangQuery(pattern string) string {

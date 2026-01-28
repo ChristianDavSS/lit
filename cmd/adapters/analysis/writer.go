@@ -3,7 +3,6 @@ package analysis
 import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/adapters/config"
-	"fmt"
 	"strings"
 )
 
@@ -27,17 +26,17 @@ func NewFileModifier(management types.NodeManagement, activePattern string) File
 // ModifyVariableName - > this function modifies the variable written the wrong way in the code, rewriting it for you.
 // Takes the initial variable name and converts it
 // Only converts from one convention to another (safety conditions)
-func (f FileModifier) ModifyVariableName(code *[]string) {
+func (f FileModifier) ModifyVariableName(code *[]string) int {
 	// get the query, cursor and captures (applying the query to fetch them)
 	root := GetAST(code, f.management.GetLanguageData().Language)
 	defer root.Close()
 	query, cursor, captures := GetCapturesByQueries(f.management.GetLanguageData().Language,
 		f.management.GetVarAppearancesQuery(f.activePattern), code, root.RootNode())
-	fmt.Println(root.RootNode().ToSexp())
 	defer query.Close()
 	defer cursor.Close()
 
 	localCache := make(map[uint]int)
+	totalWrongNames := 0
 
 	// loop through the node captures
 	for {
@@ -46,6 +45,7 @@ func (f FileModifier) ModifyVariableName(code *[]string) {
 		if match == nil {
 			break
 		}
+		totalWrongNames++
 		copyOf := *match
 		// get the node from the captures (just one capture per match)
 		node := copyOf.Captures[0].Node
@@ -61,6 +61,8 @@ func (f FileModifier) ModifyVariableName(code *[]string) {
 
 		localCache[node.StartPosition().Row] += len(newName) - int(node.EndPosition().Column-node.StartPosition().Column)
 	}
+
+	return totalWrongNames
 }
 
 // ---- Writing on files and renaming ----
