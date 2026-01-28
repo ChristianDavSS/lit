@@ -3,6 +3,7 @@ package languages
 import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
+	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	jsGrammar "github.com/tree-sitter/tree-sitter-javascript/bindings/go"
@@ -78,6 +79,10 @@ func (js javascript) GetLanguageData() types.LanguageData {
 	return js.data
 }
 
-func (js javascript) GetVarAppearancesQuery(name string) string {
-	return name
+func (js javascript) GetVarAppearancesQuery(pattern string) string {
+	return fmt.Sprintf("([(identifier) @variable.name (array_pattern (identifier) @variable.name)]") +
+		fmt.Sprintf("(#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar) +
+		fmt.Sprintf("(pair key: (property_identifier) @variable.name (#not-match @variable.name \"%s|%s\"))", pattern, domain.AllowNonNamedVar) +
+		fmt.Sprintf("(variable_declarator name: (object_pattern (shorthand_property_identifier_pattern) @variable.name)") +
+		fmt.Sprintf("(#not-match? @variable.name \"%s|%s\"))", pattern, domain.AllowNonNamedVar)
 }

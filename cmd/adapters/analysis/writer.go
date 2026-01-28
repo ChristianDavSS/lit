@@ -3,6 +3,7 @@ package analysis
 import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/adapters/config"
+	"fmt"
 	"strings"
 )
 
@@ -32,6 +33,7 @@ func (f FileModifier) ModifyVariableName(code *[]string) {
 	defer root.Close()
 	query, cursor, captures := GetCapturesByQueries(f.management.GetLanguageData().Language,
 		f.management.GetVarAppearancesQuery(f.activePattern), code, root.RootNode())
+	fmt.Println(root.RootNode().ToSexp())
 	defer query.Close()
 	defer cursor.Close()
 
