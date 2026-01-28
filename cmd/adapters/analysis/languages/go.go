@@ -67,5 +67,9 @@ func (g golang) GetLanguageData() types.LanguageData {
 }
 
 func (g golang) GetVarAppearancesQuery(pattern string) string {
-	return fmt.Sprintf("")
+	return fmt.Sprintf("([(identifier) (field_identifier)] @variable.name") +
+		fmt.Sprintf("(#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar) +
+		fmt.Sprintf("(type_declaration (type_spec name: (type_identifier) @variable.name) (#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar) +
+		fmt.Sprintf("(method_declaration receiver: (parameter_list (parameter_declaration type: ([(type_identifier) @variable.name (pointer_type (type_identifier) @variable.name)])))") +
+		fmt.Sprintf("(#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar)
 }
