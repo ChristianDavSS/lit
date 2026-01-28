@@ -3,6 +3,7 @@ package languages
 import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
+	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	javaGrammar "github.com/tree-sitter/tree-sitter-java/bindings/go"
@@ -69,6 +70,6 @@ func (j java) GetLanguageData() types.LanguageData {
 	return j.data
 }
 
-func (j java) GetVarAppearancesQuery(name string) string {
-	return name
+func (j java) GetVarAppearancesQuery(pattern string) string {
+	return fmt.Sprintf("((identifier) @variable.name (#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar)
 }

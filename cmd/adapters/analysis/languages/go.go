@@ -3,6 +3,7 @@ package languages
 import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
+	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	goGrammar "github.com/tree-sitter/tree-sitter-go/bindings/go"
@@ -65,6 +66,6 @@ func (g golang) GetLanguageData() types.LanguageData {
 	return g.data
 }
 
-func (g golang) GetVarAppearancesQuery(name string) string {
-	return name
+func (g golang) GetVarAppearancesQuery(pattern string) string {
+	return fmt.Sprintf("")
 }

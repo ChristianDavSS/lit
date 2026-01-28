@@ -16,5 +16,5 @@ type LanguageData struct {
 type NodeManagement interface {
 	ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData)
 	GetLanguageData() LanguageData
-	GetVarAppearancesQuery(name string) string
+	GetVarAppearancesQuery(pattern string) string
 }
