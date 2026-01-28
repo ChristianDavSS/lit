@@ -16,7 +16,6 @@ type ScanService struct {
 	analyzer           domain.Analyzer
 	dangerousFunctions map[string][]*domain.FunctionData
 	languagesMap       map[string]int
-	totalNamesChanged  int
 }
 
 func NewScannerService(analyzer domain.Analyzer) ScanService {
@@ -67,7 +66,7 @@ func (s *ScanService) loc(filename string, code *[]string) {
 
 func (s *ScanService) fixFile(filename string, code *[]string) {
 	defer s.wg.Done()
-	s.totalNamesChanged += s.analyzer.FixFile(filename, code)
+	s.languagesMap[filename] += s.analyzer.FixFile(filename, code)
 	WriteOnFile(filename, []byte(strings.Join(*code, "\n")))
 }
 
@@ -142,5 +141,7 @@ func (s *ScanService) PrintScanningResults() {
 }
 
 func (s *ScanService) PrintFixResults() {
-	fmt.Printf("%d names were modified successfully.\n", s.totalNamesChanged)
+	for key, value := range s.languagesMap {
+		fmt.Printf("%s - > %d names modified.\n", key, value)
+	}
 }
