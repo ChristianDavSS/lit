@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -16,11 +15,11 @@ type Point struct {
 
 // FunctionData - > struct made to register all the data returned by the parser and save it
 type FunctionData struct {
-	Name                     string
-	TotalParams, Complexity  int
-	StartPosition            Point
-	StartByte, EndByte, Size uint
-	Feedback                 string
+	Name                                  string
+	TotalParams, Complexity, InvalidNames int
+	StartPosition                         Point
+	StartByte, EndByte, Size              uint
+	Feedback                              string
 }
 
 // Directory saves up the dir name with its content
@@ -44,10 +43,8 @@ func (f *FunctionData) AddInitialData(name string, totalParams int, startByte, e
 	f.StartPosition = startPos
 }
 
-func (f *FunctionData) SetVariableFeedback(varName string, pos Point) {
-	f.Feedback += fmt.Sprintf("   Error: The variable '%s' is not using the valid naming convention. (%d:%d).\n",
-		varName, pos.Row, pos.Column,
-	)
+func (f *FunctionData) UpdateInvalidNames() {
+	f.InvalidNames++
 }
 
 // IsTargetInRange validates the range given by another function to validate it's written on the same byte range

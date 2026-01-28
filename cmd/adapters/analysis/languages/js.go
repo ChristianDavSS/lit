@@ -3,6 +3,7 @@ package languages
 import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
+	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	jsGrammar "github.com/tree-sitter/tree-sitter-javascript/bindings/go"
@@ -22,23 +23,15 @@ func NewJSLanguage(pattern string) types.NodeManagement {
 	}
 }
 
-func (js javascript) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (js javascript) ManageNode(captureNames []string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		js.variableManagement(node, nodeInfo, code)
+		nodeInfo.UpdateInvalidNames()
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
 	}
 	nodeInfo.Complexity++
-}
-
-func (js javascript) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
-	// Set the initial feedback
-	functionData.SetVariableFeedback(
-		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
-		domain.Point(varNode.Node.StartPosition()),
-	)
 }
 
 func buildJSQuery(pattern string) string {
@@ -78,6 +71,10 @@ func (js javascript) GetLanguageData() types.LanguageData {
 	return js.data
 }
 
-func (js javascript) GetVarAppearancesQuery(name string) string {
-	return name
+func (js javascript) GetVarAppearancesQuery(pattern string) string {
+	return fmt.Sprintf("([(identifier) @variable.name (array_pattern (identifier) @variable.name)]") +
+		fmt.Sprintf("(#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar) +
+		fmt.Sprintf("(pair key: (property_identifier) @variable.name (#not-match @variable.name \"%s|%s\"))", pattern, domain.AllowNonNamedVar) +
+		fmt.Sprintf("(variable_declarator name: (object_pattern (shorthand_property_identifier_pattern) @variable.name)") +
+		fmt.Sprintf("(#not-match? @variable.name \"%s|%s\"))", pattern, domain.AllowNonNamedVar)
 }

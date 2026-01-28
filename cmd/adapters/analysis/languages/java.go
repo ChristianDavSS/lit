@@ -3,6 +3,7 @@ package languages
 import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
+	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	javaGrammar "github.com/tree-sitter/tree-sitter-java/bindings/go"
@@ -21,12 +22,12 @@ func NewJavaLanguage(pattern string) types.NodeManagement {
 	}
 }
 
-func (j java) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (j java) ManageNode(captureNames []string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		j.variableManagement(node, nodeInfo, code)
+		nodeInfo.UpdateInvalidNames()
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "variable_declarator":
 		return
@@ -34,14 +35,6 @@ func (j java) ManageNode(captureNames []string, code *[]string, node tree.QueryC
 		nodeInfo.Complexity++
 	}
 	nodeInfo.Complexity++
-}
-
-func (j java) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
-	// Set the initial feedback
-	functionData.SetVariableFeedback(
-		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
-		domain.Point(varNode.Node.StartPosition()),
-	)
 }
 
 func buildJavaQuery(pattern string) string {
@@ -69,6 +62,6 @@ func (j java) GetLanguageData() types.LanguageData {
 	return j.data
 }
 
-func (j java) GetVarAppearancesQuery(name string) string {
-	return name
+func (j java) GetVarAppearancesQuery(pattern string) string {
+	return fmt.Sprintf("((identifier) @variable.name (#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar)
 }

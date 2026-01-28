@@ -28,6 +28,7 @@ func Files() *cobra.Command {
 				scanner.PrintLOCResults()
 			case fix:
 				scanner.FixFile()
+				scanner.PrintFixResults()
 			default:
 				scanner.ScanFiles()
 				scanner.PrintScanningResults()

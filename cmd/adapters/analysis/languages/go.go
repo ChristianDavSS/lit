@@ -3,6 +3,7 @@ package languages
 import (
 	"CLI_App/cmd/adapters/analysis/types"
 	"CLI_App/cmd/domain"
+	"fmt"
 
 	tree "github.com/tree-sitter/go-tree-sitter"
 	goGrammar "github.com/tree-sitter/tree-sitter-go/bindings/go"
@@ -21,12 +22,12 @@ func NewGolangLanguage(pattern string) types.NodeManagement {
 	}
 }
 
-func (g golang) ManageNode(captureNames []string, code *[]string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
+func (g golang) ManageNode(captureNames []string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
 	// Search the 'alternative' node in the children
 	alternative := node.Node.ChildByFieldName("alternative")
 	switch {
 	case captureNames[node.Index] == "variable.name":
-		g.variableManagement(node, nodeInfo, code)
+		nodeInfo.UpdateInvalidNames()
 		return
 	case node.Node.GrammarName() == "binary_expression" && node.Node.Parent().GrammarName() == "expression_list":
 		return
@@ -34,14 +35,6 @@ func (g golang) ManageNode(captureNames []string, code *[]string, node tree.Quer
 		nodeInfo.Complexity++
 	}
 	nodeInfo.Complexity++
-}
-
-func (g golang) variableManagement(varNode tree.QueryCapture, functionData *domain.FunctionData, code *[]string) {
-	// Set the initial feedback
-	functionData.SetVariableFeedback(
-		(*code)[varNode.Node.StartPosition().Row][varNode.Node.StartPosition().Column:varNode.Node.EndPosition().Column],
-		domain.Point(varNode.Node.StartPosition()),
-	)
 }
 
 func buildGolangQuery(pattern string) string {
@@ -65,6 +58,10 @@ func (g golang) GetLanguageData() types.LanguageData {
 	return g.data
 }
 
-func (g golang) GetVarAppearancesQuery(name string) string {
-	return name
+func (g golang) GetVarAppearancesQuery(pattern string) string {
+	return fmt.Sprintf("([(identifier) (field_identifier)] @variable.name") +
+		fmt.Sprintf("(#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar) +
+		fmt.Sprintf("(type_declaration (type_spec name: (type_identifier) @variable.name) (#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar) +
+		fmt.Sprintf("(method_declaration receiver: (parameter_list (parameter_declaration type: ([(type_identifier) @variable.name (pointer_type (type_identifier) @variable.name)])))") +
+		fmt.Sprintf("(#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar)
 }
