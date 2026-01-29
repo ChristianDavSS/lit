@@ -9,11 +9,13 @@ import (
 
 type FileAnalyzer struct {
 	activePattern string
+	feedback      *domain.Feedback
 }
 
-func NewFileAnalyzer(activePattern string) *FileAnalyzer {
+func NewFileAnalyzer(activePattern string, feedback *domain.Feedback) *FileAnalyzer {
 	return &FileAnalyzer{
 		activePattern: activePattern,
+		feedback:      feedback,
 	}
 }
 
@@ -25,17 +27,18 @@ func (analyzer *FileAnalyzer) AnalyzeFile(filePath string, code *[]string) []*do
 	// Calculate the cyclical complexity and get the functions returned
 	functions := analysis.CyclicalComplexity(activeLanguage, code)
 
+	messages := analyzer.feedback.GetMessages()
 	i := 0
 	for i < len(functions) {
-		if functions[i].TotalParams < domain.Messages["parameters"][0].Value &&
-			int(functions[i].Size) < domain.Messages["size"][0].Value &&
-			functions[i].Complexity < domain.Messages["complexity"][0].Value &&
+		if functions[i].TotalParams < messages["parameters"][0].MinValue &&
+			functions[i].Size < messages["size"][0].MinValue &&
+			functions[i].Complexity < messages["complexity"][0].MinValue &&
 			functions[i].InvalidNames < 1 &&
 			functions[i].Feedback == "" {
 			functions = append(functions[:i], functions[i+1:]...)
 			continue
 		}
-		functions[i].SetFunctionFeedback()
+		functions[i].SetFunctionFeedback(messages)
 		i++
 	}
 

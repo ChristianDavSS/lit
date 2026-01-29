@@ -17,9 +17,12 @@ func Files() *cobra.Command {
 			loc, _ := cmd.Flags().GetBool("loc")
 			fix, _ := cmd.Flags().GetBool("fix")
 
-			jsonAdapter := config.NewJSONAdapter()
+			configAdapter := config.NewJSONAdapter()
 			scanner := service.NewScannerService(
-				languages.NewFileAnalyzer(domain.Conventions[jsonAdapter.GetConfig().NamingConventionIndex]),
+				languages.NewFileAnalyzer(
+					domain.Conventions[configAdapter.GetConfig().NamingConventionIndex-1],
+					domain.NewFeedback(configAdapter.GetConfig()),
+				),
 			)
 
 			switch {

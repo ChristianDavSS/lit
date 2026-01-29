@@ -76,7 +76,7 @@ func CyclicalComplexity(languageInfo types.NodeManagement, code *[]string) []*do
 			// Add the initial data to the object reference in the stack
 			Stack[len(Stack)-1].AddInitialData(
 				(*code)[copyOf.Captures[1].Node.StartPosition().Row][copyOf.Captures[1].Node.StartPosition().Column:copyOf.Captures[1].Node.EndPosition().Column],
-				int(copyOf.Captures[2].Node.NamedChildCount()),
+				copyOf.Captures[2].Node.NamedChildCount(),
 				copyOf.Captures[3].Node.StartByte(), copyOf.Captures[3].Node.EndByte(),
 				copyOf.Captures[3].Node.EndPosition().Row-copyOf.Captures[2].Node.StartPosition().Row,
 				domain.Point(copyOf.Captures[2].Node.StartPosition()),

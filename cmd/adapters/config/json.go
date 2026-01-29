@@ -12,11 +12,6 @@ import (
  * json.go - > manages the json files.
  */
 
-// ConfigDto gets the value of the current index on the config file (JSON, etc.).
-type ConfigDto struct {
-	NamingConventionIndex int8 `json:"activeNamingConventionIndex"`
-}
-
 type JsonAdapter struct {
 	configPath string
 }
@@ -26,18 +21,16 @@ func NewJSONAdapter() *JsonAdapter {
 }
 
 func (json *JsonAdapter) GetConfig() *domain.Config {
-	var dto *ConfigDto
+	var dto *domain.Config
 	err := encoder.Unmarshal(json.readJsonData(), &dto)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "Couldn't read the JSON file. Are you sure it exists?")
 		os.Exit(1)
 	}
-	return &domain.Config{
-		NamingConventionIndex: dto.NamingConventionIndex,
-	}
+	return dto
 }
 
-func (json *JsonAdapter) SaveConfig(cfg *ConfigDto) {
+func (json *JsonAdapter) SaveConfig(cfg *domain.Config) {
 	data, err := encoder.Marshal(&cfg)
 	if err != nil {
 		os.Exit(1)

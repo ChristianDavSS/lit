@@ -38,12 +38,7 @@ var SnakeCase = "^[a-z][a-z0-9]*([_]{1}[a-z0-9]+)*$" + "|" + Constant
 // Example: pattern := AllowNonNamedVar + CamelCase
 var AllowNonNamedVar = "^[_]{1}$"
 
-var Conventions = map[int8]string{
-	1: LowerCamelCase,
-	2: UpperCamelCase,
-	3: CamelCase,
-	4: SnakeCase,
-}
+var Conventions = []string{LowerCamelCase, UpperCamelCase, CamelCase, SnakeCase}
 
 func RegexMatch(pattern, target string) bool {
 	matched, _ := regexp.MatchString(pattern, target)
