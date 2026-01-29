@@ -2,6 +2,7 @@ package commands
 
 import (
 	"CLI_App/cmd/adapters/config"
+	"CLI_App/cmd/domain"
 	"CLI_App/cmd/lit/ui"
 
 	"github.com/spf13/cobra"
@@ -13,8 +14,9 @@ func Configuration() *cobra.Command {
 		Short: "Configure the scan variables.",
 		Run: func(cmd *cobra.Command, args []string) {
 			idx := ui.GetNamingConvention()
+			alerts := ui.GetAlertsConfig()
 			jsonAdapter := config.NewJSONAdapter()
-			newConfig := &config.ConfigDto{NamingConventionIndex: idx}
+			newConfig := &domain.Config{NamingConventionIndex: idx, Alerts: alerts}
 			jsonAdapter.SaveConfig(newConfig)
 		},
 	}

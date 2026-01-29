@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"CLI_App/cmd/domain"
 	"fmt"
 	"os"
 	"os/exec"
@@ -33,6 +34,51 @@ func GetNamingConvention() int8 {
 
 	// Return the pattern to use
 	return selectedConvention
+}
+
+func GetAlertsConfig() domain.Alerts {
+	clearScreen(osClear[runtime.GOOS][0], osClear[runtime.GOOS][1:]...)
+	var res []domain.FeedbackValues
+	configType := []string{
+		"Type the minimum parameters of the method to mark it as ",
+		"Type the minimum complexity of the method to mark it as ",
+		"Type the minimum length of the method to mark it as ",
+	}
+	feedbackType := []string{
+		"info\n", "warning\n", "error\n",
+	}
+
+	for _, cfg := range configType {
+		var inputs []uint
+		for _, fdb := range feedbackType {
+			inputs = append(inputs, readValue(cfg+fdb, 1, uint(300)))
+		}
+		res = append(res, domain.FeedbackValues{
+			Info:    inputs[0],
+			Warning: inputs[1],
+			Error:   inputs[2],
+		})
+	}
+
+	return domain.Alerts{
+		Parameters: res[0],
+		Complexity: res[1],
+		MethodSize: res[2],
+	}
+}
+
+func readValue[T uint | int8](message string, lowRange, highRange T) T {
+	input := lowRange - 1
+	for input < lowRange || input > highRange {
+		fmt.Printf(message)
+		fmt.Scan(&input)
+		clearScreen(osClear[runtime.GOOS][0], osClear[runtime.GOOS][1:]...)
+		if input < lowRange || input > highRange {
+			fmt.Fprintln(os.Stderr, "Invalid input...")
+		}
+	}
+
+	return input
 }
 
 // Function used to clear the screen in Windows or Linux...

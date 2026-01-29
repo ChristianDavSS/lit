@@ -16,7 +16,7 @@ type Point struct {
 // FunctionData - > struct made to register all the data returned by the parser and save it
 type FunctionData struct {
 	Name                                  string
-	TotalParams, Complexity, InvalidNames int
+	TotalParams, Complexity, InvalidNames uint
 	StartPosition                         Point
 	StartByte, EndByte, Size              uint
 	Feedback                              string
@@ -28,13 +28,8 @@ type Directory struct {
 	Content []os.DirEntry
 }
 
-// Config is used to save the index of the naming convention (the content might be changed to a string)
-type Config struct {
-	NamingConventionIndex int8
-}
-
 // AddInitialData Method to append the initial data into a FunctionData "object"
-func (f *FunctionData) AddInitialData(name string, totalParams int, startByte, endByte, size uint, startPos Point) {
+func (f *FunctionData) AddInitialData(name string, totalParams, startByte, endByte, size uint, startPos Point) {
 	f.Name = name
 	f.TotalParams = totalParams
 	f.StartByte = startByte
@@ -53,11 +48,11 @@ func (f *FunctionData) IsTargetInRange(startByte, endByte uint) bool {
 }
 
 // SetFunctionFeedback loops through the feedback map and sets up the right feedback
-func (f *FunctionData) SetFunctionFeedback() {
-	for key, value := range Messages {
+func (f *FunctionData) SetFunctionFeedback(messages map[string][]Message) {
+	for key, value := range messages {
 		var msg string
 		for _, item := range value {
-			if f.getValue(key) >= item.Value {
+			if f.getValue(key) >= item.MinValue {
 				msg = item.Message
 			}
 		}
@@ -66,11 +61,11 @@ func (f *FunctionData) SetFunctionFeedback() {
 }
 
 // getValue is a helper function used to get the determined integer based on a key
-func (f *FunctionData) getValue(key string) int {
-	dict := map[string]int{
+func (f *FunctionData) getValue(key string) uint {
+	dict := map[string]uint{
 		"parameters": f.TotalParams,
 		"complexity": f.Complexity,
-		"size":       int(f.Size),
+		"size":       f.Size,
 	}
 
 	return dict[key]

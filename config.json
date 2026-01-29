@@ -1,1 +1,1 @@
-{"activeNamingConventionIndex":3}
+{"activeNamingConventionIndex":3,"alerts":{"parameters":{"info":5,"warning":8,"error":10},"complexity":{"info":10,"warning":15,"error":20},"method-length":{"info":120,"warning":150,"error":180}}}
