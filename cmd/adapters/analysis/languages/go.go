@@ -41,6 +41,9 @@ func buildGolangQuery(pattern string) string {
 	return "(function_declaration name: (_) @function.name " +
 		"parameters: (_) @function.parameters " +
 		"body: (_) @function.body ) @function " +
+		"(method_declaration name: (_) @function.name " +
+		"parameters: (_) @function.parameters " +
+		"body: (_) @function.body ) @function" +
 		// Variable names
 		"(expression_list (identifier) @variable.name" +
 		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))" +

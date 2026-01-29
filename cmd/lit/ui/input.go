@@ -6,8 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-
-	"github.com/fatih/color"
 )
 
 // osClear - > Takes the name of the os and returns the command lines to clear the stdout.
@@ -25,10 +23,10 @@ func GetNamingConvention() int8 {
 	for selectedConvention > 4 || selectedConvention < 1 {
 		clearScreen(osClear[runtime.GOOS][0], osClear[runtime.GOOS][1:]...)
 		fmt.Println("Select a valid naming convention.")
-		color.Red("[1] camelCase")
-		color.Magenta("[2] CamelCase")
-		color.Blue("[3] CamelCase/camelCase (for languages like Go)")
-		color.Cyan("[4] snake_case")
+		fmt.Println("[1] camelCase")
+		fmt.Println("[2] CamelCase")
+		fmt.Println("[3] CamelCase/camelCase (for languages like Go)")
+		fmt.Println("[4] snake_case")
 		fmt.Scanf("%d", &selectedConvention)
 	}
 

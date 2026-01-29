@@ -3,7 +3,6 @@ module CLI_App
 go 1.25.5
 
 require (
-	github.com/fatih/color v1.18.0
 	github.com/spf13/cobra v1.10.2
 	github.com/tree-sitter/go-tree-sitter v0.25.0
 	github.com/tree-sitter/tree-sitter-go v0.23.4
