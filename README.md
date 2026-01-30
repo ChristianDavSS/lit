@@ -3,9 +3,12 @@
 CLI Tool developed 100% in Golang in order to help you get quick information about your scripts in determined languages. Thus, it can be really helpful for big work enviroments in order to improve productivity or detect code anomalies,
 getting warnings about possible dangerous code.
 
+I used hexagonal architecture on the project, learning about mantainable software architectures.
+
 ### **Top features 🔝**
 With the available commands, you can scan your scripts and get useful feedback that helps you to improve your code.
 The scanning does a search in your working directory looking for the scripts written on the supported languages to scan and calculates the cyclical complexity so you can get feedback based in the metrics configured in the json file.
+It also fix your naming conventions with the flag --fix (this can make some mistakes, so use carefully).
 
 ### **Future features (plans)**
 Currently (release v1.0.0), the 'scan' command without flags only scans methods/functions but I'll implement the class scanning so it also detects the bad naming conventions on the properties.
