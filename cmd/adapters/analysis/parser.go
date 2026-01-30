@@ -48,6 +48,7 @@ func CyclicalComplexity(languageInfo types.NodeManagement, code *[]string) []*do
 	// Get our ast bases in our code and grammar
 	ast := GetAST(code, languageInfo.GetLanguageData().Language)
 	defer ast.Close()
+	fmt.Println(ast.RootNode().ToSexp())
 	// Get the basics to iterate through the captures and keep the data
 	query, cursor, captures := GetCapturesByQueries(languageInfo.GetLanguageData().Language, languageInfo.GetLanguageData().Queries, code, ast.RootNode())
 	defer query.Close()
@@ -75,11 +76,20 @@ func CyclicalComplexity(languageInfo types.NodeManagement, code *[]string) []*do
 			Stack = append(Stack, &domain.FunctionData{Complexity: 1})
 			// Add the initial data to the object reference in the stack
 			Stack[len(Stack)-1].AddInitialData(
-				(*code)[copyOf.Captures[1].Node.StartPosition().Row][copyOf.Captures[1].Node.StartPosition().Column:copyOf.Captures[1].Node.EndPosition().Column],
+				"Method "+(*code)[copyOf.Captures[1].Node.StartPosition().Row][copyOf.Captures[1].Node.StartPosition().Column:copyOf.Captures[1].Node.EndPosition().Column],
 				copyOf.Captures[2].Node.NamedChildCount(),
 				copyOf.Captures[3].Node.StartByte(), copyOf.Captures[3].Node.EndByte(),
-				copyOf.Captures[3].Node.EndPosition().Row-copyOf.Captures[2].Node.StartPosition().Row,
-				domain.Point(copyOf.Captures[2].Node.StartPosition()),
+				copyOf.Captures[3].Node.EndPosition().Row-copyOf.Captures[3].Node.StartPosition().Row,
+				domain.Point(copyOf.Captures[3].Node.StartPosition()),
+			)
+
+		case query.CaptureNames()[copyOf.Captures[0].Index] == "model":
+			Stack = append(Stack, &domain.FunctionData{Complexity: 1})
+			Stack[len(Stack)-1].AddInitialData(
+				"Model "+(*code)[copyOf.Captures[1].Node.StartPosition().Row][copyOf.Captures[1].Node.StartPosition().Column:copyOf.Captures[1].Node.EndPosition().Column],
+				0, copyOf.Captures[0].Node.StartByte(), copyOf.Captures[0].Node.EndByte(),
+				copyOf.Captures[0].Node.EndPosition().Row-copyOf.Captures[0].Node.StartPosition().Row,
+				domain.Point(copyOf.Captures[0].Node.StartPosition()),
 			)
 
 		// If there´s code without a function (JS, Python) before a function definition, we count it as main.

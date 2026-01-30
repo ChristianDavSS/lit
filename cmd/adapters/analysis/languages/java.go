@@ -14,12 +14,13 @@ type java struct {
 }
 
 func NewJavaLanguage(pattern string) types.NodeManagement {
-	return &java{
+	j := &java{
 		data: types.LanguageData{
 			Language: tree.NewLanguage(javaGrammar.Language()),
-			Queries:  buildJavaQuery(pattern),
 		},
 	}
+	j.data.Queries = buildJavaQuery() + j.GetVarAppearancesQuery(pattern)
+	return j
 }
 
 func (j java) ManageNode(captureNames []string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
@@ -37,15 +38,16 @@ func (j java) ManageNode(captureNames []string, node tree.QueryCapture, nodeInfo
 	nodeInfo.Complexity++
 }
 
-func buildJavaQuery(pattern string) string {
+func buildJavaQuery() string {
 	return "(method_declaration type: (_) name: (_) @function.name " +
 		"parameters: (formal_parameters) @function.parameters " +
 		"body: (block) @function.body ) @function " +
-		// Variable names
-		"(variable_declarator name: (identifier) @variable.name " +
-		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))" +
-		"(enhanced_for_statement name: (identifier) @variable.name " +
-		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))" +
+		"(constructor_declaration name: (_) @function.name " +
+		"parameters: (_) @function.parameters " +
+		"body: (_) @function.body ) @function" +
+		// Classes, interfaces
+		"(class_declaration name: (_) @model.name) @model" +
+		"(interface_declaration name: (_) @model.name) @model" +
 		// Keywords (+1 complexity)
 		"[" +
 		// Loops

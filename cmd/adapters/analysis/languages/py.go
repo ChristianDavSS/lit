@@ -15,12 +15,13 @@ type python struct {
 }
 
 func NewPythonLanguage(pattern string) types.NodeManagement {
-	return &python{
+	p := &python{
 		data: types.LanguageData{
 			Language: tree.NewLanguage(pyGrammar.Language()),
-			Queries:  buildPythonQuery(pattern),
 		},
 	}
+	p.data.Queries = buildPythonQuery() + p.GetVarAppearancesQuery(pattern)
+	return p
 }
 
 // ManageNode - > Function to implement the NodeManagement interface
@@ -36,15 +37,12 @@ func (p python) ManageNode(captureNames []string, node tree.QueryCapture, nodeIn
 	nodeInfo.Complexity++
 }
 
-func buildPythonQuery(pattern string) string {
+func buildPythonQuery() string {
 	return "(function_definition name: (identifier) @function.name " +
 		"parameters: (parameters) @function.parameters " +
 		"body: (block) @function.body) @function " +
-		// Variable names
-		"(assignment left: ([(identifier) @variable.name (pattern_list (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))" +
-		"(for_statement left: ([(identifier) @variable.name (pattern_list (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))" +
+		// Classes
+		"(class_definition name: (_) @model.name ) @model" +
 		// Keywords
 		"[" +
 		// If, else-if, else

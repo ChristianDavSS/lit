@@ -128,13 +128,13 @@ func (s *ScanService) PrintScanningResults() {
 	}
 
 	fmt.Println()
-	fmt.Printf("Total dangerous functions found: %d\n", totalFunctions)
+	fmt.Printf("Found %d possible improvements\n", totalFunctions)
 	for key, value := range s.dangerousFunctions {
 		fmt.Printf("- %s:\n", key)
 		for _, item := range value {
-			fmt.Printf(" * Function %s (at %d:%d)\n", item.Name, item.StartPosition.Row, item.StartPosition.Column)
+			fmt.Printf(" * %s (at %d:%d)\n", item.Name, item.StartPosition.Row, item.StartPosition.Column)
 			fmt.Printf("   Parameters: %d\n   Total lines of code: %d\n", item.TotalParams, item.Size)
-			fmt.Printf("   Found %d variables with the wrong naming convention.\n", item.InvalidNames)
+			fmt.Printf("   Found %d variables/methods/models with the wrong naming convention.\n", item.InvalidNames)
 			fmt.Println(item.Feedback)
 		}
 	}
