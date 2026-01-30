@@ -128,7 +128,7 @@ func (s *ScanService) PrintScanningResults() {
 	}
 
 	fmt.Println()
-	fmt.Printf("Total dangerous functions found: %d\n", totalFunctions)
+	fmt.Printf("Found %d possible improvements\n", totalFunctions)
 	for key, value := range s.dangerousFunctions {
 		fmt.Printf("- %s:\n", key)
 		for _, item := range value {

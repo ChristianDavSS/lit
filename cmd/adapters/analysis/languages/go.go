@@ -49,11 +49,6 @@ func buildGolangQuery() string {
 		// Structs, interfaces, etc...
 		"(type_declaration (type_spec name: (_) @model.name " +
 		"type: ([(struct_type) (interface_type)]))) @model" +
-		// Variable names
-		/*"(expression_list (identifier) @variable.name" +
-		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))" +
-		"(var_declaration (var_spec name: (identifier) @variable.name)" +
-		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))"*/
 		// Keywords
 		"[" +
 		"(if_statement) (for_statement) (expression_case)" +

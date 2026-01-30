@@ -15,12 +15,13 @@ type javascript struct {
 }
 
 func NewJSLanguage(pattern string) types.NodeManagement {
-	return &javascript{
+	js := &javascript{
 		data: types.LanguageData{
 			Language: tree.NewLanguage(jsGrammar.Language()),
-			Queries:  buildJSQuery(pattern),
 		},
 	}
+	js.data.Queries = buildJSQuery() + js.GetVarAppearancesQuery(pattern)
+	return js
 }
 
 func (js javascript) ManageNode(captureNames []string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
@@ -34,7 +35,7 @@ func (js javascript) ManageNode(captureNames []string, node tree.QueryCapture, n
 	nodeInfo.Complexity++
 }
 
-func buildJSQuery(pattern string) string {
+func buildJSQuery() string {
 	return "(function_declaration name: (identifier) @function.name " +
 		"parameters: (formal_parameters) @function.parameters " +
 		"body: (_) @function.body ) @function" +
@@ -42,15 +43,12 @@ func buildJSQuery(pattern string) string {
 		"(variable_declarator name: (identifier) @function.name " +
 		"value: (arrow_function parameters: (formal_parameters) @function.parameters " +
 		"body: (_) @function.body )) @function" +
+		// Classes
+		"(class_declaration name: (_) @model.name ) @model" +
 		// Class Methods
 		"(method_definition name: (property_identifier) @function.name " +
 		"parameters: (formal_parameters) @function.parameters " +
 		"body: (_) @function.body ) @function" +
-		// Variable names
-		"(variable_declarator name: ([(identifier) @variable.name (array_pattern (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))" +
-		"(for_in_statement left: ([(identifier) @variable.name (array_pattern (identifier) @variable.name)])" +
-		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))" +
 		// Functions body information (keywords)
 		"[" +
 		// if, else-if, else
@@ -72,9 +70,8 @@ func (js javascript) GetLanguageData() types.LanguageData {
 }
 
 func (js javascript) GetVarAppearancesQuery(pattern string) string {
-	return fmt.Sprintf("([(identifier) @variable.name (array_pattern (identifier) @variable.name)]") +
+	return fmt.Sprintf("([(identifier) @variable.name (property_identifier) @variable.name (array_pattern (identifier) @variable.name)]") +
 		fmt.Sprintf("(#not-match? @variable.name \"^%s|%s$\"))", pattern, domain.AllowNonNamedVar) +
-		fmt.Sprintf("(pair key: (property_identifier) @variable.name (#not-match @variable.name \"%s|%s\"))", pattern, domain.AllowNonNamedVar) +
 		fmt.Sprintf("(variable_declarator name: (object_pattern (shorthand_property_identifier_pattern) @variable.name)") +
 		fmt.Sprintf("(#not-match? @variable.name \"%s|%s\"))", pattern, domain.AllowNonNamedVar)
 }
