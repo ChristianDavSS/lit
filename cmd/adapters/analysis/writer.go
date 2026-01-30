@@ -53,7 +53,8 @@ func (f FileModifier) ModifyVariableName(code *[]string) int {
 		if !ok {
 			value = 0
 		}
-		newName := refactorVarName(getTokens((*code)[node.StartPosition().Row][int(node.StartPosition().Column)+value : int(node.EndPosition().Column)+value]))
+		oldName := strings.Trim((*code)[node.StartPosition().Row][int(node.StartPosition().Column)+value:int(node.EndPosition().Column)+value], "_")
+		newName := refactorVarName(GetTokens(oldName))
 
 		row := (*code)[node.StartPosition().Row]
 
@@ -66,25 +67,42 @@ func (f FileModifier) ModifyVariableName(code *[]string) int {
 }
 
 // ---- Writing on files and renaming ----
-// getSeparatorIndexes: get the indexes on the line of code where there's a separator (uppercase or underscore)
-func getTokens(line string) []string {
+
+// GetTokens : get the tokens of a variable name (without underscore or upper chars). Two pointers approach
+func GetTokens(line string) []string {
 	// slice to save up the indexes
 	var tokens []string
-	var i int
+	// define the two pointers (slow and fast) for the algorithm
+	var (
+		i, j int
+	)
 
-	// iterate through the line of code
-	for j, ch := range line {
-		if ch == 95 || ch >= 65 && ch <= 90 {
+	// iterate through the variable name
+	for j < len(line) {
+		// if we detect an upper character or an underscore, we get inside
+		if line[j] == 95 || line[j] >= 60 && line[j] <= 90 && j > 0 {
+			// set up the substring
 			tokens = append(tokens, strings.ToLower(line[i:j]))
-			if ch == 95 {
-				i = j + 1
-			} else {
-				i = j
+			// move the fast pointer to a letter
+			for line[j] == 95 {
+				j++
 			}
+			// set the slow pointer in the position of the fast one
+			i = j
+			// move the pointer one position
+			j++
+		} else {
+			// if it is a normal character, we just move the fast pointer
+			j++
 		}
-		j++
 	}
 
+	// check if the original variable started with an uppercase char (to set it that way)
+	if line[0] >= 65 && line[0] <= 90 {
+		tokens[0] = string(tokens[0][0]-32) + tokens[0][1:]
+	}
+
+	// set up the rest of the tokens and return it
 	return append(tokens, strings.ToLower(line[i:]))
 }
 
