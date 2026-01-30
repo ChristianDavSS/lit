@@ -48,7 +48,6 @@ func CyclicalComplexity(languageInfo types.NodeManagement, code *[]string) []*do
 	// Get our ast bases in our code and grammar
 	ast := GetAST(code, languageInfo.GetLanguageData().Language)
 	defer ast.Close()
-	fmt.Println(ast.RootNode().ToSexp())
 	// Get the basics to iterate through the captures and keep the data
 	query, cursor, captures := GetCapturesByQueries(languageInfo.GetLanguageData().Language, languageInfo.GetLanguageData().Queries, code, ast.RootNode())
 	defer query.Close()
