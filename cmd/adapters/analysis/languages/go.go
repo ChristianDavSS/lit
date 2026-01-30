@@ -14,12 +14,14 @@ type golang struct {
 }
 
 func NewGolangLanguage(pattern string) types.NodeManagement {
-	return &golang{
+	g := &golang{
 		data: types.LanguageData{
 			Language: tree.NewLanguage(goGrammar.Language()),
-			Queries:  buildGolangQuery(pattern),
 		},
 	}
+	g.data.Queries = buildGolangQuery() + g.GetVarAppearancesQuery(pattern)
+
+	return g
 }
 
 func (g golang) ManageNode(captureNames []string, node tree.QueryCapture, nodeInfo *domain.FunctionData) {
@@ -37,18 +39,21 @@ func (g golang) ManageNode(captureNames []string, node tree.QueryCapture, nodeIn
 	nodeInfo.Complexity++
 }
 
-func buildGolangQuery(pattern string) string {
+func buildGolangQuery() string {
 	return "(function_declaration name: (_) @function.name " +
 		"parameters: (_) @function.parameters " +
 		"body: (_) @function.body ) @function " +
 		"(method_declaration name: (_) @function.name " +
 		"parameters: (_) @function.parameters " +
 		"body: (_) @function.body ) @function" +
+		// Structs, interfaces, etc...
+		"(type_declaration (type_spec name: (_) @model.name " +
+		"type: ([(struct_type) (interface_type)]))) @model" +
 		// Variable names
-		"(expression_list (identifier) @variable.name" +
+		/*"(expression_list (identifier) @variable.name" +
 		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))" +
 		"(var_declaration (var_spec name: (identifier) @variable.name)" +
-		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))" +
+		"(#not-match? @variable.name \"" + domain.AllowNonNamedVar + "|" + pattern + "\"))"*/
 		// Keywords
 		"[" +
 		"(if_statement) (for_statement) (expression_case)" +
